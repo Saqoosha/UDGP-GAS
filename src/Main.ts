@@ -1,7 +1,19 @@
+const dataSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("data");
+
 function getCurrentRound() {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("data");
-    const value = sheet.getRange("B2").getValue();
-    return parseInt(value) || '?';
+    const value = dataSheet.getRange("B2").getValue();
+    return parseInt(value) || 0;
+}
+
+function getCurrentHeat() {
+    const value = dataSheet.getRange("B3").getValue();
+    return parseInt(value) || 0;
+}
+
+function incrementHeat() {
+    const currentHeat = getCurrentHeat();
+    dataSheet.getRange("B3").setValue(currentHeat + 1);
+    return currentHeat + 1;
 }
 
 function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
