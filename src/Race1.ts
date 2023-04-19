@@ -31,6 +31,21 @@ function setRound1Heats() {
     heatListSheet.getRange(2, 4, heats.length, 3).setValues(heats);
 }
 
+function addRace1Result(pilot: string, time: number, laps: number[]) {
+    var lock = LockService.getDocumentLock();
+    lock.waitLock(20000);
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
+    const row = sheet.getRange("A:A").getValues().findLastIndex(row => row[0] != "") + 2;
+    const heat = getCurrentHeat();
+    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length, time, "なし"];
+    sheet.getRange(row, 1, 1, value.length).setValues([value]);
+    sheet.getRange(row, 8, 1, laps.length).setValues([laps]);
+
+    SpreadsheetApp.flush();
+    lock.releaseLock();
+}
+
 function calcRace1Result() {
     const lock = LockService.getDocumentLock();
     lock.waitLock(20000);

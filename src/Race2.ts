@@ -44,7 +44,14 @@ function addRace2Results(data: RaceRecord[]) {
     const round = getRoundFromHeatNumber(currentHeat);
     if (round == 0) { return; }
 
+    var lock = LockService.getDocumentLock();
+    lock.waitLock(20000);
+
     const sorted = data.sort((a, b) => a.position - b.position);
+
+    sorted.forEach((row, i) => {
+        _addRace2Result(row.pilot, row.time, row.laps);
+    });
 
     const resultSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results（総合）");
     const heatIndex = currentHeat - HEAT_RANGE[round - 1][0]; // should be 0 to 6
@@ -67,7 +74,20 @@ function addRace2Results(data: RaceRecord[]) {
     }
 
     incrementHeat();
+
+    SpreadsheetApp.flush();
+    lock.releaseLock();
 }
+
+function _addRace2Result(pilot: string, time: number, laps: number[]) {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results");
+    const row = sheet.getRange("A:A").getValues().findLastIndex(row => row[0] != "") + 2;
+    const heat = getCurrentHeat();
+    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length, time, "なし"];
+    sheet.getRange(row, 1, 1, value.length).setValues([value]);
+    sheet.getRange(row, 8, 1, laps.length).setValues([laps]);
+}
+
 
 function _calcRace2Result() {
     const heat = getCurrentHeat();
