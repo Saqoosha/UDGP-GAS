@@ -2,11 +2,11 @@ lockfileVersion: '6.0'
 
 devDependencies:
   '@types/google-apps-script':
-    specifier: ^1.0.59
-    version: 1.0.59
+    specifier: ^1.0.61
+    version: 1.0.61
 
 packages:
 
-  /@types/google-apps-script@1.0.59:
-    resolution: {integrity: sha512-vOtsegVU/BrgofBsx6Ckzz4jDNp2zEwGHHc20AAouyP6YzytCF5vIBCSETBjsIHZya+nA8A/f7YaSkCe29jbvQ==}
+  /@types/google-apps-script@1.0.61:
+    resolution: {integrity: sha512-5w7bhexua58GsR8M9c73R3+XjM7JooWybwSLz1gpDCDeYgwh7ALhjZLYSBc0zwPWofqYFtvqpDoHO7OTv70e3A==}
     dev: true
