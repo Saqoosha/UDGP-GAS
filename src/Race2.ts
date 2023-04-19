@@ -46,12 +46,22 @@ function addRace2Results(data: RaceRecord[]) {
 
     const sorted = data.sort((a, b) => a.position - b.position);
 
+    const resultSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results（総合）");
+    const heatIndex = currentHeat - HEAT_RANGE[round - 1][0]; // should be 0 to 6
+
     if (currentHeat < HEAT_RANGE[round - 1][1]) { // current heat is not the last heat of the round
         // set next heat's 3rd pilot from the current heat's 1st pilot
         const nextHeat = currentHeat + 1;
         const row = heatListSheet.getRange(1, 2, heatListSheet.getMaxRows(), 1).getValues().findIndex(row => row[0] == nextHeat) + 1;
         heatListSheet.getRange(row, 6, 1, 1).setValue(sorted[0].pilot);
+
+        // set total rank
+        resultSheet.getRange(16 - heatIndex * 2, 2 + (round - 1) * 5, 2, 3).setValues(sorted.slice(1).map(row => [row.pilot, row.laps.length, row.time]));
+    } else {
+        // set total rank
+        resultSheet.getRange(3, 2 + (round - 1) * 5, 3, 3).setValues(sorted.map(row => [row.pilot, row.laps.length, row.time]));
     }
+
     incrementHeat();
 }
 
