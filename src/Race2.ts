@@ -60,6 +60,10 @@ function addRace2Results(data: RaceRecord[]) {
     } else {
         // set total rank
         resultSheet.getRange(3, 2 + (round - 1) * 5, 3, 3).setValues(sorted.map(row => [row.pilot, row.laps.length, row.time]));
+        if (round == 1) {
+            const totalRanking = resultSheet.getRange(3, 2, 15, 1).getValues().map(row => row[0]).filter(pilot => pilot != "");
+            _setRace2Heats(2, totalRanking);
+        }
     }
 
     incrementHeat();
