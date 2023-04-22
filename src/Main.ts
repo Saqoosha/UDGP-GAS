@@ -1,5 +1,10 @@
 const dataSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("data");
 
+function getRaceMode() {
+    const mode = dataSheet.getRange("B1").getValue();
+    return mode;
+}
+
 function getCurrentRound() {
     const value = dataSheet.getRange("B2").getValue();
     return parseInt(value) || 0;
@@ -60,13 +65,25 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     let isSuccess = false;
 
     switch (data.mode) {
-        case "udgp-quali":
-            addRace1Result(data.pilot, data.time, data.laps);
-            calcRace1Result();
-            isSuccess = true;
-            break;
+        // case "udgp-quali":
+        //     addRace1Result(data.pilot, data.time, data.laps);
+        //     calcRace1Result();
+        //     isSuccess = true;
+        //     break;
         case "udgp-race":
-            addRace2Results(data.results);
+            switch (getRaceMode()) {
+                case "Race 1":
+                    data.results
+                        .sort((a: any, b: any) => a.position - b.position)
+                        .forEach((result: any) => addRace1Result(result.pilot, result.time, result.laps));
+                    calcRace1Result();
+                    incrementHeat();
+                    isSuccess = true;
+                    break;
+                case "Race 2":
+                    addRace2Results(data.results);
+                    break;
+            }
             isSuccess = true;
             break;
     }

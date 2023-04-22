@@ -37,7 +37,7 @@ function addRace1Result(pilot: string, time: number, laps: number[]) {
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     const row = sheet.getRange("A:A").getValues().findLastIndex(row => row[0] != "") + 2;
-    const heat = getCurrentHeat();
+    const heat = getCurrentRound();
     const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length, time, "なし"];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
     sheet.getRange(row, 8, 1, laps.length).setValues([laps]);
