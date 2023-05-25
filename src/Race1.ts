@@ -173,7 +173,7 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
         if (record) {
             sheet.getRange(row, 1, 1, 8).setValues([[
                 record.round,
-                record.datetime,
+                record.datetime || "-",
                 record.pilot,
                 record.flightLaps,
                 record.time,
@@ -226,5 +226,18 @@ function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord
             lastHeat.push("");
             break;
     }
-    heatListSheet.getRange(2 + (nextRound - 1) * 6, 4, heats.length, 3).setValues(heats);
+    heatListSheet.getRange(2 + (nextRound - 1) * 7, 4, heats.length, 3).setValues(heats);
+}
+
+function clearRace1RoundResult() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（ラウンド別）");
+    sheet.getRange("A3:AC20").clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, null, false);
+    sheet.getRange("A22:AC39").clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, null, false);
+}
+
+function clearRace1PilotResult() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
+    const style = SpreadsheetApp.newTextStyle().setBold(false).build();
+    sheet.getRange("A2:H200").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
+    sheet.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
 }
