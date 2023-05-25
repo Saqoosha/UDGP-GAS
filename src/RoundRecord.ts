@@ -18,7 +18,7 @@ class RoundRecord {
     this.penalty = rawData[5];
     this.resultLaps = Number(rawData[6]);
     const laps = rawData.slice(7).map(Number).filter(x => !isNaN(x) && x > 0);
-    this.fastestLapTime = Math.min(...laps);
+    this.fastestLapTime = Math.min(...laps.slice(1));
     this.isValid = false;
   }
 }

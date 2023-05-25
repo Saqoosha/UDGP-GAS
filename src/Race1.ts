@@ -185,8 +185,10 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
                 .setBackground(record.isValid ? "white" : "#efefef");
             if (record.isValid) {
                 totalLaps += record.resultLaps;
-                totalTime += record.time;
+            } else {
+                totalLaps += Math.floor(record.resultLaps / 2);
             }
+            totalTime += record.time;
         } else {
             sheet.getRange(row, 1, 1, 8).setValues([[i + 1, "記録なし", '', '', '', '', '', '']])
                 .setFontColor("#b7b7b7")
