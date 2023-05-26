@@ -38,9 +38,9 @@ function addRace1Result(pilot: string, time: number, laps: number[]) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     const row = sheet.getRange("A:A").getValues().findLastIndex(row => row[0] != "") + 2;
     const heat = getCurrentRound();
-    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length, time, "なし"];
+    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 8, 1, laps.length).setValues([laps]);
+    sheet.getRange(row, 9, 1, laps.length).setValues([laps]);
 
     SpreadsheetApp.flush();
     lock.releaseLock();
@@ -171,13 +171,16 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
     for (let i = 0; i < records.length; i++) {
         const record = records[i];
         if (record) {
+            const penalty = [];
+            if (record.penaltyNoReturn) penalty.push("未帰還");
+            if (record.penaltyLowVoltage) penalty.push("低電圧");
             sheet.getRange(row, 1, 1, 8).setValues([[
                 record.round,
                 record.datetime || "-",
                 record.pilot,
                 record.flightLaps,
                 record.time,
-                record.penalty,
+                penalty.join(", "),
                 record.resultLaps,
                 record.isValid ? "✅" : "❌"
             ]])

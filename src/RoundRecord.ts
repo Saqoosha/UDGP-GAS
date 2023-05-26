@@ -4,7 +4,8 @@ class RoundRecord {
   pilot: string;
   flightLaps: number;
   time: number;
-  penalty: string;
+  penaltyNoReturn: boolean;
+  penaltyLowVoltage: boolean;
   resultLaps: number;
   isValid: boolean;
   fastestLapTime: number;
@@ -15,9 +16,10 @@ class RoundRecord {
     this.pilot = rawData[2];
     this.flightLaps = Number(rawData[3]);
     this.time = Number(rawData[4]);
-    this.penalty = rawData[5];
-    this.resultLaps = Number(rawData[6]);
-    const laps = rawData.slice(7).map(Number).filter(x => !isNaN(x) && x > 0);
+    this.penaltyNoReturn = Boolean(rawData[5]);
+    this.penaltyLowVoltage = Boolean(rawData[6]);
+    this.resultLaps = Number(rawData[7]);
+    const laps = rawData.slice(8).map(Number).filter(x => !isNaN(x) && x > 0);
     this.fastestLapTime = Math.min(...laps.slice(1));
     this.isValid = false;
   }

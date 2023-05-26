@@ -54,7 +54,7 @@ function addRace2Results(data: RaceRecord[]) {
     });
 
     const resultSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results（総合）");
-    const heatIndex = currentHeat - HEAT_RANGE[round - 1][0]; // should be 0 to 6
+    const heatIndex = currentHeat - HEAT_RANGE[round - 1][0]; // should be 0 to 7
 
     if (currentHeat < HEAT_RANGE[round - 1][1]) { // current heat is not the last heat of the round
         // set next heat's 3rd pilot from the current heat's 1st pilot
@@ -63,7 +63,7 @@ function addRace2Results(data: RaceRecord[]) {
         heatListSheet.getRange(row, 6, 1, 1).setValue(sorted[0].pilot);
 
         // set total rank
-        resultSheet.getRange(16 - heatIndex * 2, 2 + (round - 1) * 5, 2, 3).setValues(sorted.slice(1).map(row => [row.pilot, row.laps.length, row.time]));
+        resultSheet.getRange(18 - heatIndex * 2, 2 + (round - 1) * 5, sorted.length - 1, 3).setValues(sorted.slice(1).map(row => [row.pilot, row.laps.length, row.time]));
     } else {
         // set total rank
         resultSheet.getRange(3, 2 + (round - 1) * 5, 3, 3).setValues(sorted.map(row => [row.pilot, row.laps.length, row.time]));
@@ -83,9 +83,9 @@ function _addRace2Result(pilot: string, time: number, laps: number[]) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results");
     const row = sheet.getRange("A:A").getValues().findLastIndex(row => row[0] != "") + 2;
     const heat = getCurrentHeat();
-    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length, time, "なし"];
+    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 8, 1, laps.length).setValues([laps]);
+    sheet.getRange(row, 9, 1, laps.length).setValues([laps]);
 }
 
 
