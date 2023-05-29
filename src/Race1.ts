@@ -2,13 +2,7 @@ const heatListSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("組�
 
 function setRound1Heats() {
     const pilotsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("参加パイロット");
-    const range = pilotsSheet.getRange("A2:A");
-    const pilots = range.getValues().filter((v) => v[0] !== "").map((v) => v[0] as string);
-
-    const CHANNEL_NAMES = ["E1 5705", "F1 5740", "F4 5800"];
-    const channels = pilots.map((pilot, i) => CHANNEL_NAMES[i % 3]);
-    pilotsSheet.getRange(2, 2, channels.length, 1).setValues(channels.map((channel) => [channel]));
-
+    const pilots = pilotsSheet.getRange("B2:B").getValues().filter((v) => v[0] !== "").map((v) => v[0] as string);
     const heats = pilots.reduce((acc, pilot, i) => {
         const index = Math.floor(i / 3);
         if (!acc[index]) {
@@ -16,7 +10,7 @@ function setRound1Heats() {
         }
         acc[index].push(pilot);
         return acc;
-    }, []);
+    }, [] as string[][]);
     const lastHeat = heats[heats.length - 1];
     switch (lastHeat.length) {
         case 1:
@@ -29,6 +23,14 @@ function setRound1Heats() {
             break;
     }
     heatListSheet.getRange(2, 4, heats.length, 3).setValues(heats);
+
+    const flatHeats = heats.reduce((acc, heat) => {
+        acc.push(...heat);
+        return acc;
+    }, []);
+    const CHANNEL_NAMES = ["E1 5705", "F1 5740", "F4 5800"];
+    const channels = flatHeats.map((pilot, i) => pilot ? CHANNEL_NAMES[i % 3] : null).filter((v) => v !== null);
+    pilotsSheet.getRange(2, 3, channels.length, 1).setValues(channels.map((channel) => [channel]));
 }
 
 function addRace1Result(pilot: string, time: number, laps: number[]) {
