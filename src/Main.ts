@@ -1,4 +1,7 @@
-const dataSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("data");
+const ss = SpreadsheetApp.getActiveSpreadsheet();
+const pilotsSheet = ss.getSheetByName("参加パイロット");
+const heatListSheet = ss.getSheetByName("組み合わせ / タイムスケジュール");
+const dataSheet = ss.getSheetByName("data");
 
 function getRaceMode() {
     const mode = dataSheet.getRange("B1").getValue();
