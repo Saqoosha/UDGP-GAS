@@ -4,18 +4,15 @@ const heatListSheet = ss.getSheetByName("組み合わせ / タイムスケジュ
 const dataSheet = ss.getSheetByName("data");
 
 function getRaceMode() {
-    const mode = dataSheet.getRange("B1").getValue();
-    return mode;
+    return getValueForKey("race mode");
 }
 
 function getCurrentRound() {
-    const value = dataSheet.getRange("B2").getValue();
-    return parseInt(value) || 0;
+    return parseInt(getValueForKey("current round")) || 0;
 }
 
 function getCurrentHeat() {
-    const value = dataSheet.getRange("B3").getValue();
-    return parseInt(value) || 0;
+    return parseInt(getValueForKey("current heat")) || 0;
 }
 
 function incrementHeat() {
