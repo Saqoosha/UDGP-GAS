@@ -35,7 +35,7 @@ function InitHeats() {
     // set all heats to dataSheet
     let row = 2;
     let heatNumber = 1;
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 6; i++) {
         _setHeats(row, 1, i, heatNumber, heats.length, heats);
         row += heats.length + 1;
         heatNumber += heats.length;
