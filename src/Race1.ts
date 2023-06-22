@@ -100,7 +100,7 @@ function calcRoundRank(roundIndex: number, roundRecords: { [key: string]: RoundR
             sheet.getRange(3 + t, 1, 1, 5).setBorder(null, null, true, null, null, null, "#93c47c", SpreadsheetApp.BorderStyle.SOLID_THICK);
         }
         sheet.getRange(22, 1, 18, 4).clearContent();
-        sheet.getRange(22, 1, sortedByFastest.length, 4).setValues(sortedByFastest.map((record, index) => [index + 1, record.pilot, "", record.fastestLapTime]));
+        sheet.getRange(22, 1, sortedByFastest.length, 4).setValues(sortedByFastest.map((record, index) => [index + 1, record.pilot, "", record.fastestLapTime === Infinity ? "" : record.fastestLapTime]));
     } else {
         const column = 6 + (roundIndex - 2) * 6;
         sheet.getRange(3, column, 18, 6).clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, false, false);
@@ -196,7 +196,8 @@ function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord
             lastHeat.push("");
             break;
     }
-    heatListSheet.getRange(2 + (nextRound - 1) * 7, 4, heats.length, 3).setValues(heats);
+    const numRows = getValueForKey("heats per round") as number + 1;
+    heatListSheet.getRange(2 + (nextRound - 1) * numRows, 4, heats.length, 3).setValues(heats);
 }
 
 function clearRace1RoundResult() {
