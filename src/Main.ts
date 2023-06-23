@@ -62,7 +62,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                     const nextHeat = incrementHeat();
                     if (nextHeat % getHeatsPerRound(1) === 1) {
                         const nextRound = incrementRound();
-                        if (nextRound === 7) {
+                        if (nextRound > NUM_ROUND_RACE1) {
                             setRaceMode("Race 2");
                             setCurrentRound(1);
                         }

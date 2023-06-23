@@ -204,8 +204,10 @@ function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord
 
 function clearRace1RoundResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（ラウンド別）");
-    sheet.getRange("A3:AC20").clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, null, false);
-    sheet.getRange("A22:AC39").clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, null, false);
+    sheet.getRange(3, 1, 18, sheet.getMaxColumns())
+        .clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, null, false);
+    sheet.getRange(22, 1, 18, sheet.getMaxColumns())
+        .clearContent().setFontColor(null).setBackground(null).setBorder(null, null, null, null, null, false);
 }
 
 function clearRace1PilotResult() {
