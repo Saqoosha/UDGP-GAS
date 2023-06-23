@@ -47,7 +47,8 @@ function InitHeats() {
         heatNumber += heatCountForRace2;
     }
 
-    setValueForKey("heats per round", heats.length);
+    setHeatsPerRound(1, heats.length);
+    setHeatsPerRound(2, heatCountForRace2);
 }
 
 function _setHeats(row: number, race: number, round: number, heatStart: number, numHeats: number, heats: string[][] | undefined = undefined) {

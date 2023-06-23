@@ -23,7 +23,8 @@ function _setRace2Heats(round: number, pilots: string[]) {
         heats.pop();
         heats[heats.length - 1].push(lastHeat[0]);
     }
-    heatListSheet.getRange(37 + (round - 1) * 10, 4, heats.length, 3).setValues(heats.reverse().map(row => {
+    const row = 2 + (getHeatsPerRound(2) + 1) * NUM_ROUND_RACE1;
+    heatListSheet.getRange(row + (round - 1) * 10, 4, heats.length, 3).setValues(heats.reverse().map(row => {
         while (row.length < 3) { row.push(""); }
         return row;
     }));

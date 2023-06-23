@@ -1,3 +1,5 @@
+const NUM_ROUND_RACE1 = 6;
+
 function addRace1Result(pilot: string, time: number, laps: number[]) {
     var lock = LockService.getDocumentLock();
     lock.waitLock(20000);
@@ -45,7 +47,7 @@ function calcRace1Result() {
     }
     prevRoundData = calcRoundRank(currentRound, roundData, prevRoundData);
     addRoundResult(currentRound, prevRoundData);
-    if (currentRound < 5) {
+    if (currentRound < NUM_ROUND_RACE1) {
         setRace1NextRoundHeats(currentRound + 1, prevRoundData);
     }
 
@@ -196,7 +198,7 @@ function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord
             lastHeat.push("");
             break;
     }
-    const numRows = getValueForKey("heats per round") as number + 1;
+    const numRows = getHeatsPerRound(1) + 1;
     heatListSheet.getRange(2 + (nextRound - 1) * numRows, 4, heats.length, 3).setValues(heats);
 }
 

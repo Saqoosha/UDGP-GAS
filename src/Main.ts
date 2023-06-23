@@ -3,24 +3,6 @@ const pilotsSheet = ss.getSheetByName("参加パイロット");
 const heatListSheet = ss.getSheetByName("組み合わせ / タイムスケジュール");
 const dataSheet = ss.getSheetByName("data");
 
-function getRaceMode() {
-    return getValueForKey("race mode");
-}
-
-function getCurrentRound() {
-    return parseInt(getValueForKey("current round")) || 0;
-}
-
-function getCurrentHeat() {
-    return parseInt(getValueForKey("current heat")) || 0;
-}
-
-function incrementHeat() {
-    const currentHeat = getCurrentHeat();
-    dataSheet.getRange("B3").setValue(currentHeat + 1);
-    return currentHeat + 1;
-}
-
 function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
     let lastIndex = -1;
     for (let i = arr.length - 1; i >= 0; i--) {
@@ -77,7 +59,14 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                         .sort((a: any, b: any) => a.position - b.position)
                         .forEach((result: any) => addRace1Result(result.pilot, result.time, result.laps));
                     calcRace1Result();
-                    incrementHeat();
+                    const nextHeat = incrementHeat();
+                    if (nextHeat % getHeatsPerRound(1) === 1) {
+                        const nextRound = incrementRound();
+                        if (nextRound === 7) {
+                            setRaceMode("Race 2");
+                            setCurrentRound(1);
+                        }
+                    }
                     isSuccess = true;
                     break;
                 case "Race 2":
