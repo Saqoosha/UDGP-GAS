@@ -178,7 +178,7 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
 }
 
 function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord[]) {
-    const pilots = prevRoundResults.sort((a, b) => a.fastestLapTime - b.fastestLapTime).map(record => record.pilot);
+    const pilots = prevRoundResults.slice().sort((a, b) => a.fastestLapTime - b.fastestLapTime).map(record => record.pilot);
     const heats = pilots.reduce((acc, pilot, i) => {
         const index = Math.floor(i / 3);
         if (!acc[index]) {
