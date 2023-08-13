@@ -4,7 +4,7 @@
         "commands": [
             {
                 "match": "\\.(js|ts)$",
-                "cmd": "clasp push && clasp deploy -i AKfycbwusFxN9eb_EiIi2Vyj9y2hq_3Tmlus4HgAIrnPavOngK4bYV6DR9xMGIaJ8clLue9L"
+                "cmd": "clasp push && clasp deploy -i AKfycbxOsGDbI4a9hAllcymi0d5r7uMz5hpJQEbXnbbVfl5MZtyJmXjUFqH_oyVIYz9XcIU7XQ"
             }
         ]
     }
