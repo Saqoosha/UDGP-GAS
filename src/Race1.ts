@@ -33,7 +33,7 @@ function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: n
     const heat = getCurrentRound();
     const value = [id, heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 10, 1, laps.length).setValues([laps.map((lap, index) => {
+    sheet.getRange(row, 9, 1, laps.length).setValues([laps.map((lap, index) => {
         if (lap == 0) {
             return "-";
         } else if (index > 0 && laps[index - 1] == 0) {
@@ -173,8 +173,7 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
         const record = records[i];
         if (record) {
             const penalty = [];
-            if (record.penaltyNoReturn) penalty.push("未帰還");
-            if (record.penaltyLowVoltage) penalty.push("低電圧");
+            if (record.penalty) penalty.push("❌");
             sheet.getRange(row, 1, 1, 8).setValues([[
                 record.round,
                 record.datetime || "-",
