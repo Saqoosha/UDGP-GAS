@@ -9,7 +9,15 @@ function addRace1Result(pilot: string, time: number, laps: number[]) {
     const heat = getCurrentRound();
     const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 9, 1, laps.length).setValues([laps]);
+    sheet.getRange(row, 9, 1, laps.length).setValues([laps.map((lap, index) => {
+        if (lap == 0) {
+            return "-";
+        } else if (index > 0 && laps[index - 1] == 0) {
+            // return `(${lap.toFixed(2)})`;
+            return "-";
+        }
+        return lap;
+    })]);
 
     SpreadsheetApp.flush();
     lock.releaseLock();
