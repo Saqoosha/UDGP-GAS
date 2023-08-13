@@ -1,15 +1,39 @@
 const NUM_ROUND_RACE1 = 6;
 
-function addRace1Result(pilot: string, time: number, laps: number[]) {
+function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pilotName: string): number {
+    // 全ての値を取得
+    const values = sheet.getRange("A:D").getValues();
+
+    // IDとPilotNameで一致するrowを検索
+    for (let i = 0; i < values.length; i++) {
+        const [rowId, , , rowPilotName] = values[i];
+        if (rowId === id && rowPilotName === pilotName) {
+            return i + 1; // rowインデックスは1から始まるため
+        }
+    }
+
+    // IDが未設定のrowを探す
+    for (let i = 0; i < values.length; i++) {
+        const [rowId] = values[i];
+        if (rowId === "") {
+            return i + 1; // rowインデックスは1から始まるため
+        }
+    }
+
+    // 見つからない場合は新しいrowを追加
+    return values.length + 1;
+}
+
+function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: number[]) {
     var lock = LockService.getDocumentLock();
     lock.waitLock(20000);
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
-    const row = sheet.getRange("A:A").getValues().findLastIndex(row => row[0] != "") + 2;
+    const row = findOrAddRow(sheet, id, pilot);
     const heat = getCurrentRound();
-    const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
+    const value = [id, heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 9, 1, laps.length).setValues([laps.map((lap, index) => {
+    sheet.getRange(row, 10, 1, laps.length).setValues([laps.map((lap, index) => {
         if (lap == 0) {
             return "-";
         } else if (index > 0 && laps[index - 1] == 0) {
@@ -41,7 +65,7 @@ function calcRace1Result() {
     let currentRound = 1;
     let roundData: { [key: string]: RoundRecord; } = {};
     let prevRoundData: RoundRecord[];
-    for (let row of sheet.getRange(2, 1, sheet.getMaxRows(), sheet.getMaxColumns()).getValues()) {
+    for (let row of sheet.getRange(2, 2, sheet.getMaxRows(), sheet.getMaxColumns()).getValues()) {
         if (row[0] == "") { break; }
         const record = new RoundRecord(row);
         if (record.round != currentRound) {
