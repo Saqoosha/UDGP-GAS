@@ -35,13 +35,13 @@ function InitHeats() {
     // set all heats to dataSheet
     let row = 2;
     let heatNumber = 1;
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= NUM_ROUND_RACE1; i++) {
         _setHeats(row, 1, i, heatNumber, heats.length, heats);
         row += heats.length + 1;
         heatNumber += heats.length;
     }
     const heatCountForRace2 = Math.floor(pilots.length / 2);
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= NUM_ROUND_RACE2; i++) {
         _setHeats(row, 2, i, heatNumber, heatCountForRace2);
         row += heatCountForRace2 + 1;
         heatNumber += heatCountForRace2;

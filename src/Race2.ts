@@ -1,4 +1,4 @@
-const NUM_ROUND_RACE2 = 3;
+const NUM_ROUND_RACE2 = 2;
 
 function setRace2Heats() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（総合）");

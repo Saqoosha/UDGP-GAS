@@ -1,4 +1,4 @@
-const NUM_ROUND_RACE1 = 6;
+const NUM_ROUND_RACE1 = 5;
 
 function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pilotName: string): number {
     // 全ての値を取得
