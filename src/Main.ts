@@ -50,18 +50,21 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
         case "udgp-race":
             switch (getRaceMode()) {
                 case "Race 1":
-                    data.results
+                    const stats = data.results
                         .sort((a: any, b: any) => a.position - b.position)
-                        .forEach((result: any) => addOrUpdateRace1Result(data.id, result.pilot, result.time, result.laps));
+                        .map((result: any) => addOrUpdateRace1Result(data.id, result.pilot, result.time, result.laps));
+                    console.log(stats);
                     calcRace1Result();
-                    // const nextHeat = incrementHeat();
-                    // if (nextHeat % getHeatsPerRound(1) === 1) {
-                    //     const nextRound = incrementRound();
-                    //     if (nextRound > NUM_ROUND_RACE1) {
-                    //         setRaceMode("Race 2");
-                    //         setCurrentRound(1);
-                    //     }
-                    // }
+                    if (stats[0] == "added") {
+                        const nextHeat = incrementHeat();
+                        if (nextHeat % getHeatsPerRound(1) === 1) {
+                            const nextRound = incrementRound();
+                            if (nextRound > NUM_ROUND_RACE1) {
+                                setRaceMode("Race 2");
+                                setCurrentRound(1);
+                            }
+                        }
+                    }
                     isSuccess = true;
                     break;
                 case "Race 2":

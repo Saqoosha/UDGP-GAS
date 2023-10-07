@@ -1,6 +1,6 @@
 const NUM_ROUND_RACE1 = 5;
 
-function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pilotName: string): number {
+function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pilotName: string): [number, "found" | "added"] {
     // 全ての値を取得
     const values = sheet.getRange("A:D").getValues();
 
@@ -8,7 +8,7 @@ function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pil
     for (let i = 0; i < values.length; i++) {
         const [rowId, , , rowPilotName] = values[i];
         if (rowId === id && rowPilotName === pilotName) {
-            return i + 1; // rowインデックスは1から始まるため
+            return [i + 1, "found"]; // rowインデックスは1から始まるため
         }
     }
 
@@ -16,12 +16,12 @@ function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pil
     for (let i = 0; i < values.length; i++) {
         const [rowId] = values[i];
         if (rowId === "") {
-            return i + 1; // rowインデックスは1から始まるため
+            return [i + 1, "added"]; // rowインデックスは1から始まるため
         }
     }
 
     // 見つからない場合は新しいrowを追加
-    return values.length + 1;
+    return [values.length + 1, "added"];
 }
 
 function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: number[]) {
@@ -29,7 +29,7 @@ function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: n
     lock.waitLock(20000);
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
-    const row = findOrAddRow(sheet, id, pilot);
+    const [row, foundOrAdded] = findOrAddRow(sheet, id, pilot);
     const heat = getCurrentRound();
     const value = [id, heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
@@ -45,6 +45,8 @@ function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: n
 
     SpreadsheetApp.flush();
     lock.releaseLock();
+
+    return foundOrAdded;
 }
 
 function calcRace1Result() {
