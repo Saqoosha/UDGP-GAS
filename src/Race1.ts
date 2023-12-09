@@ -5,12 +5,12 @@ function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pil
     const values = sheet.getRange("A:D").getValues();
 
     // IDとPilotNameで一致するrowを検索
-    for (let i = 0; i < values.length; i++) {
-        const [rowId, , , rowPilotName] = values[i];
-        if (rowId === id && rowPilotName === pilotName) {
-            return [i + 1, "found"]; // rowインデックスは1から始まるため
-        }
-    }
+    // for (let i = 0; i < values.length; i++) {
+    //     const [rowId, , , rowPilotName] = values[i];
+    //     if (rowId === id && rowPilotName === pilotName) {
+    //         return [i + 1, "found"]; // rowインデックスは1から始まるため
+    //     }
+    // }
 
     // IDが未設定のrowを探す
     for (let i = 0; i < values.length; i++) {
@@ -73,7 +73,7 @@ function calcRace1Result() {
         if (record.round != currentRound) {
             prevRoundData = calcRoundRank(currentRound, roundData, prevRoundData);
             addRoundResult(currentRound, prevRoundData);
-            setRace1NextRoundHeats(currentRound + 1, prevRoundData);
+            setRace1NextRoundHeatsByFastest(currentRound + 1, prevRoundData);
             currentRound = record.round;
             roundData = {};
         }
@@ -82,7 +82,8 @@ function calcRace1Result() {
     prevRoundData = calcRoundRank(currentRound, roundData, prevRoundData);
     addRoundResult(currentRound, prevRoundData);
     if (currentRound < NUM_ROUND_RACE1) {
-        setRace1NextRoundHeats(currentRound + 1, prevRoundData);
+        // setRace1NextRoundHeatsByFastest(currentRound + 1, prevRoundData);
+        setRace1NextRoundHeatsByLaps(currentRound + 1, prevRoundData);
     }
 
     const sheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
@@ -210,8 +211,17 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
     return { totalLaps, totalTime };
 }
 
-function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord[]) {
+function setRace1NextRoundHeatsByFastest(nextRound: number, prevRoundResults: RoundRecord[]) {
     const pilots = prevRoundResults.slice().sort((a, b) => a.fastestLapTime - b.fastestLapTime).map(record => record.pilot);
+    setRace1Heats(nextRound, pilots);
+}
+
+function setRace1NextRoundHeatsByLaps(nextRound: number, prevRoundResults: RoundRecord[]) {
+    const pilots = prevRoundResults.slice().map(record => record.pilot);
+    setRace1Heats(nextRound, pilots);
+}
+
+function setRace1Heats(round: number, pilots: string[]) {
     const heats = pilots.reduce((acc, pilot, i) => {
         const index = Math.floor(i / 3);
         if (!acc[index]) {
@@ -232,7 +242,7 @@ function setRace1NextRoundHeats(nextRound: number, prevRoundResults: RoundRecord
             break;
     }
     const numRows = getHeatsPerRound(1) + 1;
-    heatListSheet.getRange(2 + (nextRound - 1) * numRows, 4, heats.length, 3).setValues(heats);
+    heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, 3).setValues(heats);
 }
 
 function clearRace1RoundResult() {
