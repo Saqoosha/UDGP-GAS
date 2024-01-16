@@ -4,7 +4,7 @@ function InitHeats() {
 
     // round 1 heat list
     const heats = pilots.reduce((acc, pilot, i) => {
-        const index = Math.floor(i / 3);
+        const index = Math.floor(i / 4);
         if (!acc[index]) {
             acc[index] = [];
         }
@@ -13,14 +13,26 @@ function InitHeats() {
     }, [] as string[][]);
     const lastHeat = heats[heats.length - 1];
     switch (lastHeat.length) {
-        case 1:
+        case 1: // 最後のヒートが1人のときは、最後の3ヒートを3人ずつにする
+            heats[heats.length - 2].unshift(heats[heats.length - 3].pop() as string);
+            lastHeat.unshift(heats[heats.length - 2].pop() as string);
+            lastHeat.unshift(heats[heats.length - 2].pop() as string);
+            break;
+        case 2: // 最後のヒートが2人のときは、前のヒートから1人を移動させて、3人・3人にする
             lastHeat.unshift(heats[heats.length - 2].pop() as string);
             lastHeat.push("");
-            heats[heats.length - 2].push("");
             break;
-        case 2:
+        case 3:
             lastHeat.push("");
             break;
+    }
+
+    // ensure all heats have 4 columns
+    for (let i = 0; i < heats.length; i++) {
+        const heat = heats[i];
+        while (heat.length < 4) {
+            heat.push("");
+        }
     }
 
     // set channels to pilotsSheet from heat 1
@@ -28,8 +40,8 @@ function InitHeats() {
         acc.push(...heat);
         return acc;
     }, []);
-    const CHANNEL_NAMES = ["E1 5705", "F1 5740", "F4 5800"];
-    const channels = flatHeats.map((pilot, i) => pilot ? CHANNEL_NAMES[i % 3] : null).filter((v) => v !== null);
+    const CHANNEL_NAMES = ["R2 5695", "5720", "F3 5780", "A4 5805"];
+    const channels = flatHeats.map((pilot, i) => pilot ? CHANNEL_NAMES[i % 4] : null).filter((v) => v !== null);
     pilotsSheet.getRange(2, 3, channels.length, 1).setValues(channels.map((channel) => [channel]));
 
     // set all heats to dataSheet
@@ -54,7 +66,7 @@ function InitHeats() {
 
 function _setHeats(row: number, race: number, round: number, heatStart: number, numHeats: number, heats: string[][] | undefined = undefined) {
     // reset
-    heatListSheet.getRange(row, 1, numHeats, 6).clearContent().setHorizontalAlignment("center");
+    heatListSheet.getRange(row, 1, numHeats, 7).clearContent().setHorizontalAlignment("center");
     heatListSheet.getRange(row, 1, numHeats, heatListSheet.getMaxColumns()).setBackground(null);
 
     // title
@@ -66,15 +78,15 @@ function _setHeats(row: number, race: number, round: number, heatStart: number, 
     // time
     if (heatStart == 1) {
         heatListSheet.getRange(row, 3).setValue("9:00:00");
-        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C10,0)");
+        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C11,0)");
     } else {
-        heatListSheet.getRange(row, 3).setFormulaR1C1("=R[-2]C[0]+time(0,R3C10,0)");
-        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C10,0)");
+        heatListSheet.getRange(row, 3).setFormulaR1C1("=R[-2]C[0]+time(0,R3C11,0)");
+        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C11,0)");
     }
 
     // pilot
     if (heatStart == 1 && heats) {
-        heatListSheet.getRange(row, 4, heats.length, 3).setValues(heats);
+        heatListSheet.getRange(row, 4, heats.length, 4).setValues(heats);
     }
 
     // interval

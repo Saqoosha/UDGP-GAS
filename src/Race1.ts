@@ -73,7 +73,8 @@ function calcRace1Result() {
         if (record.round != currentRound) {
             prevRoundData = calcRoundRank(currentRound, roundData, prevRoundData);
             addRoundResult(currentRound, prevRoundData);
-            setRace1NextRoundHeatsByFastest(currentRound + 1, prevRoundData);
+            // setRace1NextRoundHeatsByFastest(currentRound + 1, prevRoundData);
+            setRace1NextRoundHeatsByLaps(currentRound + 1, prevRoundData);
             currentRound = record.round;
             roundData = {};
         }
