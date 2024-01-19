@@ -1,8 +1,4 @@
-function InitHeats() {
-    const pilotsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("参加パイロット");
-    const pilots = pilotsSheet.getRange("B2:B").getValues().filter((v) => v[0] !== "").map((v) => v[0] as string);
-
-    // round 1 heat list
+function generateHeats(pilots: string[]): string[][] {
     const heats = pilots.reduce((acc, pilot, i) => {
         const index = Math.floor(i / 4);
         if (!acc[index]) {
@@ -34,6 +30,14 @@ function InitHeats() {
             heat.push("");
         }
     }
+    return heats;
+}
+
+function InitHeats() {
+    const pilotsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("参加パイロット");
+    const pilots = pilotsSheet.getRange("B2:B").getValues().filter((v) => v[0] !== "").map((v) => v[0] as string);
+
+    const heats = generateHeats(pilots);
 
     // set channels to pilotsSheet from heat 1
     const flatHeats = heats.reduce((acc, heat) => {
@@ -52,7 +56,7 @@ function InitHeats() {
         row += heats.length + 1;
         heatNumber += heats.length;
     }
-    const heatCountForRace2 = Math.floor(pilots.length / 2);
+    const heatCountForRace2 = Math.floor(pilots.length / 3);
     for (let i = 1; i <= NUM_ROUND_RACE2; i++) {
         _setHeats(row, 2, i, heatNumber, heatCountForRace2);
         row += heatCountForRace2 + 1;

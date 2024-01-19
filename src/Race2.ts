@@ -8,7 +8,7 @@ function setRace2Heats() {
 
 function _setRace2Heats(round: number, pilots: string[]) {
     const heats = pilots.reduce((acc: string[][], pilot: string, i: number) => {
-        const index = Math.floor(i / 2);
+        const index = Math.floor(i / 3);
         if (!acc[index]) {
             acc[index] = [];
         }
@@ -21,8 +21,8 @@ function _setRace2Heats(round: number, pilots: string[]) {
         heats[heats.length - 1].push(lastHeat[0]);
     }
     const row = 2 + (getHeatsPerRound(1) + 1) * NUM_ROUND_RACE1 + (getHeatsPerRound(2) + 1) * (round - 1);
-    heatListSheet.getRange(row, 4, heats.length, 3).setValues(heats.reverse().map(row => {
-        while (row.length < 3) { row.push(""); }
+    heatListSheet.getRange(row, 4, heats.length, 4).setValues(heats.reverse().map(row => {
+        while (row.length < 4) { row.push(""); }
         return row;
     }));
 }
@@ -44,13 +44,13 @@ function addRace2Results(data: RaceRecord[]) {
     const heatIndexInRound = currentHeat - getHeatsPerRound(1) * NUM_ROUND_RACE1 - getHeatsPerRound(2) * (currentRound - 1) - 1; // 0 based
 
     if (heatIndexInRound < getHeatsPerRound(2) - 1) { // current heat is not the last heat of the round
-        // set next heat's 3rd pilot from the current heat's 1st pilot
+        // set next heat's 4th pilot from the current heat's 1st pilot
         const nextHeat = currentHeat + 1;
         const row = heatListSheet.getRange(1, 2, heatListSheet.getMaxRows(), 1).getValues().findIndex(row => row[0] == nextHeat) + 1;
-        heatListSheet.getRange(row, 6, 1, 1).setValue(sorted[0].pilot);
+        heatListSheet.getRange(row, 7, 1, 1).setValue(sorted[0].pilot);
 
         // set total rank
-        const r = 2 + getValueForKey("num pilots") - heatIndexInRound * 2;
+        const r = 2 + getValueForKey("num pilots") - heatIndexInRound * 3;
         const c = 2 + (currentRound - 1) * 5;
         resultSheet.getRange(r, c, sorted.length - 1, 3)
             .setValues(sorted.slice(1).map(row => [row.pilot, row.laps.length, row.time]));

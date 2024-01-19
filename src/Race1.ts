@@ -223,27 +223,9 @@ function setRace1NextRoundHeatsByLaps(nextRound: number, prevRoundResults: Round
 }
 
 function setRace1Heats(round: number, pilots: string[]) {
-    const heats = pilots.reduce((acc, pilot, i) => {
-        const index = Math.floor(i / 3);
-        if (!acc[index]) {
-            acc[index] = [];
-        }
-        acc[index].push(pilot);
-        return acc;
-    }, []);
-    const lastHeat = heats[heats.length - 1];
-    switch (lastHeat.length) {
-        case 1:
-            lastHeat.unshift(heats[heats.length - 2].pop() as string);
-            lastHeat.push("");
-            heats[heats.length - 2].push("");
-            break;
-        case 2:
-            lastHeat.push("");
-            break;
-    }
+    const heats = generateHeats(pilots);
     const numRows = getHeatsPerRound(1) + 1;
-    heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, 3).setValues(heats);
+    heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, 4).setValues(heats);
 }
 
 function clearRace1RoundResult() {
