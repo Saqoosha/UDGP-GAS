@@ -35,7 +35,7 @@ function generateHeats(pilots: string[]): string[][] {
 
 function InitHeats() {
     const pilotsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("参加パイロット");
-    const pilots = pilotsSheet.getRange("B2:B").getValues().filter((v) => v[0] !== "").map((v) => v[0] as string);
+    const pilots = pilotsSheet.getRange("C2:C").getValues().filter((v) => v[0] !== "").map((v) => v[0] as string);
 
     const heats = generateHeats(pilots);
 
@@ -46,7 +46,7 @@ function InitHeats() {
     }, []);
     const CHANNEL_NAMES = ["R2 5695", "5720", "F3 5780", "A4 5805"];
     const channels = flatHeats.map((pilot, i) => pilot ? CHANNEL_NAMES[i % 4] : null).filter((v) => v !== null);
-    pilotsSheet.getRange(2, 3, channels.length, 1).setValues(channels.map((channel) => [channel]));
+    pilotsSheet.getRange(2, 4, channels.length, 1).setValues(channels.map((channel) => [channel]));
 
     // set all heats to dataSheet
     let row = 2;
