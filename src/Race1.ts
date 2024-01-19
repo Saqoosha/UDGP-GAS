@@ -1,5 +1,3 @@
-const NUM_ROUND_RACE1 = 5;
-
 function findOrAddRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, id: string, pilotName: string): [number, "found" | "added"] {
     // 全ての値を取得
     const values = sheet.getRange("A:D").getValues();
@@ -82,7 +80,7 @@ function calcRace1Result() {
     }
     prevRoundData = calcRoundRank(currentRound, roundData, prevRoundData);
     addRoundResult(currentRound, prevRoundData);
-    if (currentRound < NUM_ROUND_RACE1) {
+    if (currentRound < getNumRoundForRace1()) {
         // setRace1NextRoundHeatsByFastest(currentRound + 1, prevRoundData);
         setRace1NextRoundHeatsByLaps(currentRound + 1, prevRoundData);
     }

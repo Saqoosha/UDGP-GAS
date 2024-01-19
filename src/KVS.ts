@@ -73,3 +73,11 @@ function getHeatsPerRound(round: number) {
 function setHeatsPerRound(round: number, num: number) {
     setValueForKey("heats per round " + round, num);
 }
+
+function getNumRoundForRace1() {
+    return parseInt(getValueForKey("num rounds of race 1")) || 0;
+}
+
+function getNumRoundForRace2() {
+    return parseInt(getValueForKey("num rounds of race 2")) || 0;
+}

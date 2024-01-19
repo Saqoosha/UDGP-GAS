@@ -1,5 +1,3 @@
-const NUM_ROUND_RACE2 = 2;
-
 function setRace2Heats() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（総合）");
     const pilots = sheet.getRange(2, 2, sheet.getMaxRows(), 1).getValues().map(row => row[0]).filter(pilot => pilot != "");
@@ -20,7 +18,7 @@ function _setRace2Heats(round: number, pilots: string[]) {
         heats.pop();
         heats[heats.length - 1].push(lastHeat[0]);
     }
-    const row = 2 + (getHeatsPerRound(1) + 1) * NUM_ROUND_RACE1 + (getHeatsPerRound(2) + 1) * (round - 1);
+    const row = 2 + (getHeatsPerRound(1) + 1) * getNumRoundForRace1() + (getHeatsPerRound(2) + 1) * (round - 1);
     heatListSheet.getRange(row, 4, heats.length, 4).setValues(heats.reverse().map(row => {
         while (row.length < 4) { row.push(""); }
         return row;
@@ -41,7 +39,7 @@ function addRace2Results(data: RaceRecord[]) {
     });
 
     const resultSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results（総合）");
-    const heatIndexInRound = currentHeat - getHeatsPerRound(1) * NUM_ROUND_RACE1 - getHeatsPerRound(2) * (currentRound - 1) - 1; // 0 based
+    const heatIndexInRound = currentHeat - getHeatsPerRound(1) * getNumRoundForRace1() - getHeatsPerRound(2) * (currentRound - 1) - 1; // 0 based
 
     if (heatIndexInRound < getHeatsPerRound(2) - 1) { // current heat is not the last heat of the round
         // set next heat's 4th pilot from the current heat's 1st pilot
@@ -57,7 +55,7 @@ function addRace2Results(data: RaceRecord[]) {
     } else {
         // set total rank
         resultSheet.getRange(3, 2 + (currentRound - 1) * 5, 3, 3).setValues(sorted.map(row => [row.pilot, row.laps.length, row.time]));
-        if (currentRound < NUM_ROUND_RACE2) {
+        if (currentRound < getNumRoundForRace2()) {
             const totalRanking = resultSheet.getRange(3, 2, 15, 1).getValues().map(row => row[0]).filter(pilot => pilot != "");
             _setRace2Heats(currentRound + 1, totalRanking);
             incrementRound();
