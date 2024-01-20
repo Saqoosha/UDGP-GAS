@@ -48,13 +48,13 @@ function addRace2Results(data: RaceRecord[]) {
         heatListSheet.getRange(row, 7, 1, 1).setValue(sorted[0].pilot);
 
         // set total rank
-        const r = 2 + getValueForKey("num pilots") - heatIndexInRound * 3;
+        const r = 7 + (getHeatsPerRound(2) - 2 - heatIndexInRound) * 3;
         const c = 2 + (currentRound - 1) * 5;
         resultSheet.getRange(r, c, sorted.length - 1, 3)
             .setValues(sorted.slice(1).map(row => [row.pilot, row.laps.length, row.time]));
     } else {
         // set total rank
-        resultSheet.getRange(3, 2 + (currentRound - 1) * 5, 3, 3).setValues(sorted.map(row => [row.pilot, row.laps.length, row.time]));
+        resultSheet.getRange(3, 2 + (currentRound - 1) * 5, sorted.length, 3).setValues(sorted.map(row => [row.pilot, row.laps.length, row.time]));
         if (currentRound < getNumRoundForRace2()) {
             const totalRanking = resultSheet.getRange(3, 2, 15, 1).getValues().map(row => row[0]).filter(pilot => pilot != "");
             _setRace2Heats(currentRound + 1, totalRanking);
