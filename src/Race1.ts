@@ -87,7 +87,7 @@ function calcRace1Result() {
 
     const sheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
     const style = SpreadsheetApp.newTextStyle().setBold(false).build();
-    sheet2.getRange("A2:H200").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
+    sheet2.getRange("A2:H").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
     sheet2.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
 
     const sortedQualiResult = Object.keys(race1Result).map((pilot) => {
@@ -101,7 +101,7 @@ function calcRace1Result() {
     });
 
     const sheet3 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（総合）");
-    sheet3.getRange("A2:F50").clearContent();
+    sheet3.getRange("A2:E").clearContent();
     sortedQualiResult.forEach((result, index) => {
         const row = index + 2;
         sheet3.getRange(`A${row}:E${row}`).setValues([
@@ -226,6 +226,14 @@ function setRace1Heats(round: number, pilots: string[]) {
     heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, 4).setValues(heats);
 }
 
+function clearRace1RawResult() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
+    sheet.getRange("A2:F").clearContent();
+    sheet.getRange("G2:G").setValue(false);
+    sheet.getRange("H2:H").setValue("=IF(G2=TRUE, E2-2, E2)");
+    sheet.getRange("I2:AH").clearContent();
+}
+
 function clearRace1RoundResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（ラウンド別）");
     sheet.getRange(3, 1, 18, sheet.getMaxColumns())
@@ -237,6 +245,11 @@ function clearRace1RoundResult() {
 function clearRace1PilotResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
     const style = SpreadsheetApp.newTextStyle().setBold(false).build();
-    sheet.getRange("A2:H200").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
+    sheet.getRange("A2:H").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
     sheet.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
+}
+
+function clearRace1TotalResult() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（総合）");
+    sheet.getRange("A2:E").clearContent();
 }
