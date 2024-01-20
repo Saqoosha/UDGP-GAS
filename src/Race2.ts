@@ -74,7 +74,7 @@ function _addRace2Result(pilot: string, time: number, laps: number[]) {
     const heat = getCurrentHeat();
     const value = [heat, new Date().toLocaleString('ja-JP'), pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 9, 1, laps.length).setValues([laps]);
+    sheet.getRange(row, 8, 1, laps.length).setValues([laps]);
 }
 
 function _calcRace2Result() {
@@ -88,7 +88,7 @@ function _calcRace2Result() {
                 pilot: row[2],
                 position: 0,
                 time: row[4],
-                laps: row.slice(7).map(Number).filter(x => !isNaN(x) && x > 0),
+                laps: row.slice(6).map(Number).filter(x => !isNaN(x) && x > 0),
             } as RaceRecord;
         })
         .sort((a, b) => {
@@ -102,4 +102,19 @@ function _calcRace2Result() {
     data.forEach((result, index) => { result.position = index; });
     // console.log({ data });
     addRace2Results(data);
+}
+
+function clearRace2RawResult() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results");
+    sheet.getRange("A2:E").clearContent();
+    sheet.getRange("F2:F").setValue(false);
+    sheet.getRange("G2:G").setValue("=IF(F2=TRUE, D2-2, D2)");
+    sheet.getRange("H2:AH").clearContent();
+}
+
+function clearRace2TotalResult() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results（総合）");
+    for (var i = 0; i < 3; i++) {
+        sheet.getRange(3, 2 + i * 5, sheet.getMaxRows(), 3).clearContent();
+    }
 }
