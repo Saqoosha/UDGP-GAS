@@ -28,12 +28,12 @@ function onEdit(e: GoogleAppsScript.Events.SheetsOnEdit) {
 function doPost(e: GoogleAppsScript.Events.DoPost) {
     // log
     {
-        var lock = LockService.getDocumentLock();
+        const lock = LockService.getDocumentLock();
         lock.waitLock(20000);
 
         const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log");
         sheet.getRange("1:1").insertCells(SpreadsheetApp.Dimension.ROWS);
-        sheet.getRange(1, 1).setValue((new Date).toLocaleString('ja-JP'));
+        sheet.getRange(1, 1).setValue(new Date().toLocaleString("ja-JP"));
         sheet.getRange(1, 2).setValue(e);
         sheet.getRange(1, 3).setValue(e.postData.contents);
 
@@ -49,13 +49,21 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     switch (data.mode) {
         case "udgp-race":
             switch (getRaceMode()) {
-                case "Race 1":
+                case "Race 1": {
+                    interface RaceResult {
+                        position: number;
+                        pilot: string;
+                        time: number;
+                        laps: number[];
+                    }
                     const stats = data.results
-                        .sort((a: any, b: any) => a.position - b.position)
-                        .map((result: any) => addOrUpdateRace1Result(data.id, result.pilot, result.time, result.laps));
+                        .sort((a: RaceResult, b: RaceResult) => a.position - b.position)
+                        .map((result: RaceResult) =>
+                            addOrUpdateRace1Result(data.id, result.pilot, result.time, result.laps),
+                        );
                     console.log(stats);
                     calcRace1Result();
-                    if (stats[0] == "added") {
+                    if (stats[0] === "added") {
                         const nextHeat = incrementHeat();
                         if (nextHeat % getHeatsPerRound(1) === 1) {
                             const nextRound = incrementRound();
@@ -67,6 +75,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                     }
                     isSuccess = true;
                     break;
+                }
                 case "Race 2":
                     addRace2Results(data.results);
                     break;

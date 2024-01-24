@@ -7,5 +7,9 @@
                 "cmd": "clasp push && clasp deploy -i AKfycbxEhzHLt6R5ZdEwLFeSuGzOLHEIOPOU5OzpysQ5LCGAwd09L8yVRhZYEOzSPBXkA_M"
             }
         ]
+    },
+    "editor.codeActionsOnSave": {
+        "quickfix.biome": "always",
+        "source.organizeImports.biome": "explicit"
     }
 }

@@ -1,11 +1,11 @@
 function getValueForKey(key: string) {
-    var cache = CacheService.getScriptCache();
-    var cached = cache.get(key);
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get(key);
     if (cached != null) {
         return cached;
     }
-    var data = dataSheet.getRange(1, 1, dataSheet.getLastRow(), 2).getValues();
-    for (var i = 0; i < data.length; i++) {
+    const data = dataSheet.getRange(1, 1, dataSheet.getLastRow(), 2).getValues();
+    for (let i = 0; i < data.length; i++) {
         if (data[i][0] === key) {
             cache.put(key, data[i][1].toString(), 20);
             return data[i][1];
@@ -14,9 +14,9 @@ function getValueForKey(key: string) {
     return null;
 }
 
-function setValueForKey(key: string, value: any): void {
-    var cache = CacheService.getScriptCache();
-    var data = dataSheet.getRange(1, 1, dataSheet.getLastRow(), 2).getValues();
+function setValueForKey(key: string, value: string | number): void {
+    const cache = CacheService.getScriptCache();
+    const data = dataSheet.getRange(1, 1, dataSheet.getLastRow(), 2).getValues();
     for (let i = 0; i < data.length; i++) {
         if (data[i][0] === key) {
             dataSheet.getRange(i + 1, 2).setValue(value);
@@ -67,11 +67,11 @@ function incrementHeat() {
 }
 
 function getHeatsPerRound(round: number) {
-    return parseInt(getValueForKey("heats per round " + round)) || 0;
+    return parseInt(getValueForKey(`heats per round ${round}`)) || 0;
 }
 
 function setHeatsPerRound(round: number, num: number) {
-    setValueForKey("heats per round " + round, num);
+    setValueForKey(`heats per round ${round}`, num);
 }
 
 function getNumRoundForRace1() {
