@@ -9,8 +9,9 @@ function setRace2Heats() {
 }
 
 function _setRace2Heats(round: number, pilots: string[]) {
+    const numChannels = getNumChannels();
     const heats = pilots.reduce((acc: string[][], pilot: string, i: number) => {
-        const index = Math.floor(i / 3);
+        const index = Math.floor(i / (numChannels - 1));
         if (!acc[index]) {
             acc[index] = [];
         }
@@ -23,9 +24,9 @@ function _setRace2Heats(round: number, pilots: string[]) {
         heats[heats.length - 1].push(lastHeat[0]);
     }
     const row = 2 + (getHeatsPerRound(1) + 1) * getNumRoundForRace1() + (getHeatsPerRound(2) + 1) * (round - 1);
-    heatListSheet.getRange(row, 4, heats.length, 4).setValues(
+    heatListSheet.getRange(row, 4, heats.length, numChannels).setValues(
         heats.reverse().map((row) => {
-            while (row.length < 4) {
+            while (row.length < numChannels) {
                 row.push("");
             }
             return row;
@@ -52,17 +53,17 @@ function addRace2Results(data: RaceRecord[]) {
 
     if (heatIndexInRound < getHeatsPerRound(2) - 1) {
         // current heat is not the last heat of the round
-        // set next heat's 4th pilot from the current heat's 1st pilot
+        // set next heat's last pilot from the current heat's 1st pilot
         const nextHeat = currentHeat + 1;
         const row =
             heatListSheet
                 .getRange(1, 2, heatListSheet.getMaxRows(), 1)
                 .getValues()
                 .findIndex((row) => row[0] === nextHeat) + 1;
-        heatListSheet.getRange(row, 7, 1, 1).setValue(sorted[0].pilot);
+        heatListSheet.getRange(row, 3 + getNumChannels(), 1, 1).setValue(sorted[0].pilot);
 
         // set total rank
-        const r = 7 + (getHeatsPerRound(2) - 2 - heatIndexInRound) * 3;
+        const r = 3 + getNumChannels() + (getHeatsPerRound(2) - 2 - heatIndexInRound) * (getNumChannels() - 1);
         const c = 2 + (currentRound - 1) * 5;
         resultSheet
             .getRange(r, c, sorted.length - 1, 3)

@@ -278,9 +278,9 @@ function setRace1NextRoundHeatsByLaps(nextRound: number, prevRoundResults: Round
 }
 
 function setRace1Heats(round: number, pilots: string[]) {
-    const heats = generateHeats(pilots);
+    const heats = generateHeats(pilots, getNumChannels());
     const numRows = getHeatsPerRound(1) + 1;
-    heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, 4).setValues(heats);
+    heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, heats[0].length).setValues(heats);
 }
 
 function clearRace1RawResult() {

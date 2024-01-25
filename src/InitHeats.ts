@@ -1,6 +1,6 @@
-function generateHeats(pilots: string[]): string[][] {
+function generateHeats(pilots: string[], numChannels: number): string[][] {
     const heats = pilots.reduce((acc, pilot, i) => {
-        const index = Math.floor(i / 4);
+        const index = Math.floor(i / numChannels);
         if (!acc[index]) {
             acc[index] = [];
         }
@@ -8,25 +8,32 @@ function generateHeats(pilots: string[]): string[][] {
         return acc;
     }, [] as string[][]);
     const lastHeat = heats[heats.length - 1];
-    switch (lastHeat.length) {
-        case 1: // 最後のヒートが1人のときは、最後の3ヒートを3人ずつにする
-            heats[heats.length - 2].unshift(heats[heats.length - 3].pop() as string);
-            lastHeat.unshift(heats[heats.length - 2].pop() as string);
-            lastHeat.unshift(heats[heats.length - 2].pop() as string);
-            break;
-        case 2: // 最後のヒートが2人のときは、前のヒートから1人を移動させて、3人・3人にする
-            lastHeat.unshift(heats[heats.length - 2].pop() as string);
-            lastHeat.push("");
-            break;
+    switch (numChannels) {
         case 3:
-            lastHeat.push("");
+            switch (lastHeat.length) {
+                case 1: // 最後のヒートが1人のときは、前のヒートから1人を移動させて、2人・2人にする
+                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
+                    break;
+            }
+            break;
+        case 4:
+            switch (lastHeat.length) {
+                case 1: // 最後のヒートが1人のときは、最後の3ヒートを3人ずつにする
+                    heats[heats.length - 2].unshift(heats[heats.length - 3].pop() as string);
+                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
+                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
+                    break;
+                case 2: // 最後のヒートが2人のときは、前のヒートから1人を移動させて、3人・3人にする
+                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
+                    break;
+            }
             break;
     }
 
-    // ensure all heats have 4 columns
+    // ensure all heats have required columns
     for (let i = 0; i < heats.length; i++) {
         const heat = heats[i];
-        while (heat.length < 4) {
+        while (heat.length < numChannels) {
             heat.push("");
         }
     }
@@ -45,16 +52,22 @@ function InitHeats() {
         .filter((v) => v[0] !== "")
         .map((v) => v[0] as string);
 
-    const heats = generateHeats(pilots);
+    const numChannels = getNumChannels();
+    const heats = generateHeats(pilots, numChannels);
 
     // set channels to pilotsSheet from heat 1
     const flatHeats = heats.reduce((acc, heat) => {
         acc.push(...heat);
         return acc;
     }, []);
-    const CHANNEL_NAMES = ["R2 5695", "5720", "F3 5780", "A4 5805"];
-    const channels = flatHeats.map((pilot, i) => (pilot ? CHANNEL_NAMES[i % 4] : null)).filter((v) => v !== null);
+    const CHANNEL_NAMES =
+        numChannels === 3 ? ["E1 5705", "F1 5740", "F4 5800", ""] : ["R2 5695", "5720", "F3 5780", "A4 5805"];
+    const channels = flatHeats
+        .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
+        .filter((v) => v !== null);
     pilotsSheet.getRange(2, 4, channels.length, 1).setValues(channels.map((channel) => [channel]));
+
+    heatListSheet.getRange(1, 4, 1, 4).setValues([CHANNEL_NAMES]);
 
     // set all heats to dataSheet
     let row = 2;
@@ -64,12 +77,17 @@ function InitHeats() {
         row += heats.length + 1;
         heatNumber += heats.length;
     }
-    const heatCountForRace2 = Math.floor(pilots.length / 3);
+    const heatCountForRace2 = Math.floor(pilots.length / (numChannels - 1));
     for (let i = 1; i <= getNumRoundForRace2(); i++) {
         _setHeats(row, 2, i, heatNumber, heatCountForRace2);
         row += heatCountForRace2 + 1;
         heatNumber += heatCountForRace2;
     }
+
+    heatListSheet
+        .getRange(row - 1, 1, 1, heatListSheet.getMaxColumns())
+        .setBackground(null)
+        .clearContent();
 
     setHeatsPerRound(1, heats.length);
     setHeatsPerRound(2, heatCountForRace2);
@@ -105,11 +123,11 @@ function _setHeats(
 
     // pilot
     if (heatStart === 1 && heats) {
-        heatListSheet.getRange(row, 4, heats.length, 4).setValues(heats);
+        heatListSheet.getRange(row, 4, heats.length, heats[0].length).setValues(heats);
     }
 
     // interval
     const intervalRow = row + numHeats;
     heatListSheet.getRange(intervalRow, 1, 1, heatListSheet.getMaxColumns()).setBackground("#d9d9d9").clearContent();
-    heatListSheet.getRange(row, 1).setValue("組み合わせ発表＆チャンネル調整").setHorizontalAlignment("left");
+    heatListSheet.getRange(intervalRow, 1).setValue("組み合わせ発表＆チャンネル調整").setHorizontalAlignment("left");
 }
