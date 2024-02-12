@@ -131,3 +131,22 @@ function formatTimestampToTimeString(timestamp: number | string): string {
     // HH:MM:SS形式の文字列を作成
     return `${hours}:${minutes}:${seconds}`;
 }
+
+/**
+ * 指定された範囲内で検索キーに一致する行を見つけ、その行の特定の列の値を返す。
+ *
+ * @param {Array[]} rangeValues - 検索する範囲の値（例: C2:D5の値）。
+ * @param {string} searchKey - 検索するキー（例: B26の値）。
+ * @return {string} 検索に一致した行の特定の列の値または空文字列。
+ */
+function PILOT_LOOKUP(rangeValues, searchKey) {
+    // 指定された範囲で検索キーに一致する行を見つける
+    for (let i = 0; i < rangeValues.length; i++) {
+        if (rangeValues[i][1] == searchKey) { // 2列目（順位など）が検索キーに一致するかチェック
+            return rangeValues[i][0]; // 1列目（名前など）の値を返す
+        }
+    }
+
+    // 一致する値が見つからない場合は空文字列を返す
+    return "";
+}
