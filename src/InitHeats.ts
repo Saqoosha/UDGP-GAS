@@ -42,7 +42,7 @@ function generateHeats(pilots: string[], numChannels: number): string[][] {
 
 function InitHeats() {
     // clear heatListSheet and clear background
-    heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), 7).clearContent();
+    heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), 10).clearContent();
     heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), heatListSheet.getMaxColumns()).setBackground(null);
 
     const pilotsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("参加パイロット");
@@ -67,7 +67,7 @@ function InitHeats() {
         .filter((v) => v !== null);
     pilotsSheet.getRange(2, 4, channels.length, 1).setValues(channels.map((channel) => [channel]));
 
-    heatListSheet.getRange(1, 4, 1, 4).setValues([CHANNEL_NAMES]);
+    heatListSheet.getRange(1, 7, 1, 4).setValues([CHANNEL_NAMES]);
 
     // set all heats to dataSheet
     let row = 2;
@@ -103,7 +103,7 @@ function _setHeats(
     heats: string[][] | undefined = undefined,
 ) {
     // reset
-    heatListSheet.getRange(row, 1, numHeats, 7).clearContent().setHorizontalAlignment("center");
+    heatListSheet.getRange(row, 1, numHeats, 10).clearContent().setHorizontalAlignment("center");
     heatListSheet.getRange(row, 1, numHeats, heatListSheet.getMaxColumns()).setBackground(null);
 
     // title
@@ -115,15 +115,16 @@ function _setHeats(
     // time
     if (heatStart === 1) {
         heatListSheet.getRange(row, 3).setValue("9:00:00");
-        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C11,0)");
+        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C14,0)");
     } else {
-        heatListSheet.getRange(row, 3).setFormulaR1C1("=R[-2]C[0]+time(0,R3C11,0)");
-        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C11,0)");
+        heatListSheet.getRange(row, 3).setFormulaR1C1("=R[-2]C[0]+time(0,R3C14,0)");
+        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C14,0)");
     }
+    heatListSheet.getRange(row, 6, numHeats, 1).setFormulaR1C1("=IF(ISBLANK(R[0]C[-1]), \"\", (R[0]C[-1]-R[0]C[-3])*1440)");
 
     // pilot
     if (heatStart === 1 && heats) {
-        heatListSheet.getRange(row, 4, heats.length, heats[0].length).setValues(heats);
+        heatListSheet.getRange(row, 7, heats.length, heats[0].length).setValues(heats);
     }
 
     // interval

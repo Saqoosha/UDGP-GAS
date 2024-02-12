@@ -26,16 +26,18 @@ function findOrAddRow(
     return [values.length + 1, "added"];
 }
 
-function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: number[]) {
+function addOrUpdateRace1Result(id: string, start: number, pilot: string, time: number, laps: number[]) {
     const lock = LockService.getDocumentLock();
     lock.waitLock(20000);
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     const [row, foundOrAdded] = findOrAddRow(sheet, id, pilot);
-    const heat = getCurrentRound();
-    const value = [id, heat, new Date().toLocaleString("ja-JP"), pilot, laps.length - 1, time];
+    const round = getCurrentRound();
+    const heat = getCurrentHeat();
+    const startStr = new Date(start).toLocaleString("ja-JP");
+    const value = [id, round, heat, startStr, pilot, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 9, 1, laps.length).setValues([
+    sheet.getRange(row, 10, 1, laps.length).setValues([
         laps.map((lap, index) => {
             if (lap === 0) {
                 return "-";
@@ -47,6 +49,7 @@ function addOrUpdateRace1Result(id: string, pilot: string, time: number, laps: n
             return lap;
         }),
     ]);
+    sheet.getRange(row, 4).setNumberFormat("H:mm:ss");
 
     SpreadsheetApp.flush();
     lock.releaseLock();
@@ -58,7 +61,7 @@ function calcRace1Result() {
     const lock = LockService.getDocumentLock();
     lock.waitLock(20000);
 
-    const race1Result: { [key: string]: RoundRecord[] } = {};
+    const race1Result: { [key: string]: RoundRecord[]; } = {};
     const addRoundResult = (round: number, records: RoundRecord[]) => {
         for (const record of records) {
             if (!Object.hasOwn(race1Result, record.pilot)) {
@@ -70,7 +73,7 @@ function calcRace1Result() {
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     let currentRound = 1;
-    let roundData: { [key: string]: RoundRecord } = {};
+    let roundData: { [key: string]: RoundRecord; } = {};
     let prevRoundData: RoundRecord[];
     for (const row of sheet.getRange(2, 2, sheet.getMaxRows(), sheet.getMaxColumns()).getValues()) {
         if (row[0] === "") {
@@ -126,7 +129,7 @@ function calcRace1Result() {
 
 function calcRoundRank(
     roundIndex: number,
-    roundRecords: { [key: string]: RoundRecord },
+    roundRecords: { [key: string]: RoundRecord; },
     prevRoundRecords: RoundRecord[],
 ) {
     const sortedByLaps = Object.values(roundRecords).sort((a, b) => {
@@ -280,15 +283,15 @@ function setRace1NextRoundHeatsByLaps(nextRound: number, prevRoundResults: Round
 function setRace1Heats(round: number, pilots: string[]) {
     const heats = generateHeats(pilots, getNumChannels());
     const numRows = getHeatsPerRound(1) + 1;
-    heatListSheet.getRange(2 + (round - 1) * numRows, 4, heats.length, heats[0].length).setValues(heats);
+    heatListSheet.getRange(2 + (round - 1) * numRows, 7, heats.length, heats[0].length).setValues(heats);
 }
 
 function clearRace1RawResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
-    sheet.getRange("A2:F").clearContent();
-    sheet.getRange("G2:G").setValue(false);
-    sheet.getRange("H2:H").setValue("=IF(G2=TRUE, E2-2, E2)");
-    sheet.getRange("I2:AH").clearContent();
+    sheet.getRange("A2:G").clearContent();
+    sheet.getRange("H2:H").setValue(false);
+    sheet.getRange("I2:I").setValue("=IF(H2=TRUE, F2-2, F2)");
+    sheet.getRange("J2:AI").clearContent();
 }
 
 function clearRace1RoundResult() {
@@ -317,4 +320,11 @@ function clearRace1PilotResult() {
 function clearRace1TotalResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（総合）");
     sheet.getRange("A2:E").clearContent();
+}
+
+function clearRace1AllResults() {
+    clearRace1RawResult();
+    clearRace1PilotResult();
+    clearRace1RoundResult();
+    clearRace1TotalResult();
 }
