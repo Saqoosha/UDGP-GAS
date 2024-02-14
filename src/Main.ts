@@ -1,6 +1,7 @@
 const ss = SpreadsheetApp.getActiveSpreadsheet();
 const pilotsSheet = ss.getSheetByName("参加パイロット");
 const heatListSheet = ss.getSheetByName("組み合わせ / タイムスケジュール");
+const tournamentSheet = ss.getSheetByName("Race 2 Tournament");
 const dataSheet = ss.getSheetByName("data");
 
 function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
@@ -76,7 +77,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                     break;
                 }
                 case "Race 2":
-                    addRace2Results(data.results);
+                    addRace2Results(data.id, data.start, data.results);
                     break;
             }
             isSuccess = true;
