@@ -60,7 +60,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                     }
                     const stats = (data.results as RaceResult[])
                         .sort((a, b) => a.position - b.position)
-                        .map((result) => addOrUpdateRace1Result(data.id, data.start, result.pilot, result.time, result.laps));
+                        .map((result) => addOrUpdateRace1Result(data.id, data.start, result.pilot, result.position, result.time, result.laps));
                     console.log(stats);
                     calcRace1Result();
                     if (stats[0] === "added") {

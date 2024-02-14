@@ -26,7 +26,7 @@ function findOrAddRow(
     return [values.length + 1, "added"];
 }
 
-function addOrUpdateRace1Result(id: string, start: number, pilot: string, time: number, laps: number[]) {
+function addOrUpdateRace1Result(id: string, start: number, pilot: string, position: number, time: number, laps: number[]) {
     const lock = LockService.getDocumentLock();
     lock.waitLock(20000);
 
@@ -35,9 +35,9 @@ function addOrUpdateRace1Result(id: string, start: number, pilot: string, time: 
     const round = getCurrentRound();
     const heat = getCurrentHeat();
     const startStr = new Date(start).toLocaleString("ja-JP");
-    const value = [id, round, heat, startStr, pilot, laps.length - 1, time];
+    const value = [id, round, heat, startStr, pilot, position + 1, laps.length - 1, time];
     sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 10, 1, laps.length).setValues([
+    sheet.getRange(row, 11, 1, laps.length).setValues([
         laps.map((lap, index) => {
             if (lap === 0) {
                 return "-";
