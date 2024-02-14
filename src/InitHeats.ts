@@ -61,7 +61,7 @@ function InitHeats() {
         return acc;
     }, []);
     const CHANNEL_NAMES =
-        numChannels === 3 ? ["E1 5705", "F1 5740", "F4 5800", ""] : ["R2 5695", "5720", "F3 5780", "A4 5805"];
+        numChannels === 3 ? ["E1 5705", "F1 5740", "F4 5800", ""] : ["E1 5705", "B1 5733", "A5 5785", "A4 5805"];
     const channels = flatHeats
         .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
         .filter((v) => v !== null);
@@ -72,17 +72,21 @@ function InitHeats() {
     // set all heats to dataSheet
     let row = 2;
     let heatNumber = 1;
+    // Race 1
     for (let i = 1; i <= getNumRoundForRace1(); i++) {
         _setHeats(row, 1, i, heatNumber, heats.length, heats);
         row += heats.length + 1;
         heatNumber += heats.length;
     }
-    const heatCountForRace2 = Math.floor(pilots.length / (numChannels - 1));
-    for (let i = 1; i <= getNumRoundForRace2(); i++) {
-        _setHeats(row, 2, i, heatNumber, heatCountForRace2);
-        row += heatCountForRace2 + 1;
-        heatNumber += heatCountForRace2;
+    // Race 2 - Double Elimination Tournament
+    const tournamentHeatCells = ["D3", "D9", "D15", "D21", "D27", "I6", "D33", "I18", "I24", "I30", "N12", "N27", "S22", "S16"];
+    const heatCountForRace2 = tournamentHeatCells.length;
+    _setHeats(row, 2, 0, heatNumber, heatCountForRace2);
+    for (let cell of tournamentHeatCells) {
+        setTournmentHeatRef(row++, cell);
     }
+    row++;
+    tournamentSheet.getRange("B2").setValue(heatNumber);
 
     heatListSheet
         .getRange(row - 1, 1, 1, heatListSheet.getMaxColumns())
@@ -107,7 +111,7 @@ function _setHeats(
     heatListSheet.getRange(row, 1, numHeats, heatListSheet.getMaxColumns()).setBackground(null);
 
     // title
-    heatListSheet.getRange(row, 1).setValue(`Race ${race}-${round}`);
+    heatListSheet.getRange(row, 1).setValue(round > 0 ? `Race ${race}-${round}` : `Race ${race}`);
 
     // heat number
     heatListSheet.getRange(row, 2, numHeats, 1).setValues(new Array(numHeats).fill(0).map((_, i) => [i + heatStart]));
@@ -131,4 +135,31 @@ function _setHeats(
     const intervalRow = row + numHeats;
     heatListSheet.getRange(intervalRow, 1, 1, heatListSheet.getMaxColumns()).setBackground("#d9d9d9").clearContent();
     heatListSheet.getRange(intervalRow, 1).setValue("組み合わせ発表＆チャンネル調整").setHorizontalAlignment("left");
+}
+
+/**
+ * 指定された範囲に対して、別のシートの特定の範囲からの値を参照する数式を設定する。
+ *
+ * @param {number} startRow - 数式を設定する開始行番号。
+ * @param {string} referenceStartCell - 参照する開始セル（例: 'D3'）。
+ */
+function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
+    const referenceSheetName = "Race 2 Tournament";
+    var startColumn = 'G'; // 数式を設定する開始列（この例では 'G' 列から開始）
+    var numberOfColumns = 4; // 設定する数式の列数
+    var formulas = [[]]; // 数式を格納する2次元配列を初期化
+
+    // 参照するセルの列名と行番号を抽出
+    var referenceColumn = referenceStartCell.match(/[A-Za-z]+/)[0];
+    var referenceRow = parseInt(referenceStartCell.match(/\d+/)[0], 10);
+
+    // 数式を生成
+    for (var i = 0; i < numberOfColumns; i++) {
+        var currentCell = referenceColumn + (referenceRow + i); // 現在の参照セルを計算
+        formulas[0].push(`='${referenceSheetName}'!${currentCell}`); // 数式を配列に追加
+    }
+
+    // 範囲を指定して数式を設定
+    var range = heatListSheet.getRange(startColumn + startRow + ':' + String.fromCharCode(startColumn.charCodeAt(0) + numberOfColumns - 1) + startRow);
+    range.setFormulas([formulas[0]]);
 }
