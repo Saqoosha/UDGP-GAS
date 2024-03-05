@@ -86,6 +86,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                     break;
                 }
                 case "Race 2":
+                    setHeatStartTime(data.start);
                     addRace2Results(data.id, data.start, data.results);
                     break;
             }
