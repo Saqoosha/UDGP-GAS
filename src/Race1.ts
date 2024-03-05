@@ -295,10 +295,10 @@ function setRace1Heats(round: number, pilots: string[]) {
 
 function clearRace1RawResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
-    sheet.getRange("A2:G").clearContent();
-    sheet.getRange("H2:H").setValue(false);
-    sheet.getRange("I2:I").setValue("=IF(H2=TRUE, F2-2, F2)");
-    sheet.getRange("J2:AI").clearContent();
+    sheet.getRange("A2:H").clearContent();
+    sheet.getRange("I2:I").setValue(false);
+    sheet.getRange("J2:J").setValue("=IF(I2=TRUE, G2-2, G2)");
+    sheet.getRange("K2:AK").clearContent();
 }
 
 function clearRace1RoundResult() {

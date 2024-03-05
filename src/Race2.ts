@@ -160,15 +160,17 @@ function _calcRace2Result() {
     // console.log({ data });
     addRace2Results(data);
 }
+*/
 
 function clearRace2RawResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results");
-    sheet.getRange("A2:E").clearContent();
-    sheet.getRange("F2:F").setValue(false);
-    sheet.getRange("G2:G").setValue("=IF(F2=TRUE, D2-2, D2)");
-    sheet.getRange("H2:AH").clearContent();
+    sheet.getRange("A2:H").clearContent();
+    sheet.getRange("I2:I").setValue(false);
+    sheet.getRange("J2:J").setValue("=IF(I2=TRUE, G2-2, G2)");
+    sheet.getRange("K2:AK").clearContent();
 }
 
+/*
 function clearRace2TotalResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 2 Results（総合）");
     for (let i = 0; i < 3; i++) {
