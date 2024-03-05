@@ -335,3 +335,59 @@ function clearRace1AllResults() {
     clearRace1RoundResult();
     clearRace1TotalResult();
 }
+
+function sendDummyResult() {
+    const date = new Date();
+    const generateId = () => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+        const milliseconds = String(date.getMilliseconds()).padStart(3, "0");
+        return `${year}${month}${day}${hours}${minutes}${seconds}${milliseconds}`;
+    };
+
+    const heat = getCurrentHeat();
+    const row = findRowIndexByHeatNumber(heat);
+    const pilots = heatListSheet.getRange(row, 7, 1, 3).getValues()[0];
+    console.log({ heat, row, pilots });
+
+    const data = {
+        id: generateId(),
+        mode: "udgp-race",
+        start: date.getTime(),
+        results: [
+            {
+                pilot: pilots[0],
+                position: 0,
+                time: 62 + Math.random(),
+                laps: [1.723, 29.5, 30.977],
+            },
+            {
+                pilot: pilots[1],
+                position: 1,
+                time: 64 + Math.random(),
+                laps: [2.234, 29.543, 31.053],
+            },
+            {
+                pilot: pilots[2],
+                position: 3,
+                time: 66 + Math.random(),
+                laps: [3.433, 29.56, 31.205],
+            },
+        ],
+    };
+
+    const url =
+        "https://script.google.com/macros/s/AKfycbxDxX9w3id9vP5mFTglSVQ7REkMlPgZ-Jo4Z_zsgruQJ-bBR3y8E6CaAqEgtxeZphatEA/exec";
+
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+        method: "post",
+        payload: JSON.stringify(data),
+    };
+    const response = UrlFetchApp.fetch(url, options);
+    const content = response.getContentText();
+    Logger.log(content);
+}
