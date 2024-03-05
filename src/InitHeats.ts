@@ -81,19 +81,22 @@ function InitHeats() {
     // Race 2 - Double Elimination Tournament
     const tournamentHeatCells = [
         "D3",
-        "D9",
-        "D15",
-        "D21",
-        "D27",
-        "I6",
+        "D8",
+        "D13",
+        "D18",
+        "D23",
+        "D28",
         "D33",
+        "D38",
+        "D43",
+        "D48",
+        "I12",
         "I18",
-        "I24",
-        "I30",
-        "N12",
-        "N27",
-        "S22",
-        "S16",
+        "I33",
+        "I38",
+        "I43",
+        "N33",
+        "N15",
     ];
     const heatCountForRace2 = tournamentHeatCells.length;
     _setHeats(row, 2, 0, heatNumber, heatCountForRace2);

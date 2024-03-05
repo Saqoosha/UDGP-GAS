@@ -373,7 +373,7 @@ function sendDummyResult() {
             },
             {
                 pilot: pilots[2],
-                position: 3,
+                position: 2,
                 time: 66 + Math.random(),
                 laps: [3.433, 29.56, 31.205],
             },
