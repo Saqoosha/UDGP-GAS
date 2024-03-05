@@ -26,7 +26,14 @@ function findOrAddRow(
     return [values.length + 1, "added"];
 }
 
-function addOrUpdateRace1Result(id: string, start: number, pilot: string, position: number, time: number, laps: number[]) {
+function addOrUpdateRace1Result(
+    id: string,
+    start: number,
+    pilot: string,
+    position: number,
+    time: number,
+    laps: number[],
+) {
     const lock = LockService.getDocumentLock();
     lock.waitLock(20000);
 
@@ -61,7 +68,7 @@ function calcRace1Result() {
     const lock = LockService.getDocumentLock();
     lock.waitLock(20000);
 
-    const race1Result: { [key: string]: RoundRecord[]; } = {};
+    const race1Result: { [key: string]: RoundRecord[] } = {};
     const addRoundResult = (round: number, records: RoundRecord[]) => {
         for (const record of records) {
             if (!Object.hasOwn(race1Result, record.pilot)) {
@@ -73,7 +80,7 @@ function calcRace1Result() {
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     let currentRound = 1;
-    let roundData: { [key: string]: RoundRecord; } = {};
+    let roundData: { [key: string]: RoundRecord } = {};
     let prevRoundData: RoundRecord[];
     for (const row of sheet.getRange(2, 2, sheet.getMaxRows(), sheet.getMaxColumns()).getValues()) {
         if (row[0] === "") {
@@ -129,7 +136,7 @@ function calcRace1Result() {
 
 function calcRoundRank(
     roundIndex: number,
-    roundRecords: { [key: string]: RoundRecord; },
+    roundRecords: { [key: string]: RoundRecord },
     prevRoundRecords: RoundRecord[],
 ) {
     const sortedByLaps = Object.values(roundRecords).sort((a, b) => {

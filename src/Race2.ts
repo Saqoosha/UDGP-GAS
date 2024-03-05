@@ -96,12 +96,31 @@ function addRace2Results(id: string, start: number, data: RaceRecord[]) {
     lock.releaseLock();
 }
 
-function _addRace2Result(id: string, round: number, heat: number, start: number, pilot: string, position: number, time: number, laps: number[]) {
-    const row = race2ResultSheet
-        .getRange("A:A")
-        .getValues()
-        .findLastIndex((row) => row[0] !== "") + 2;
-    const value = [id, round, heat, new Date(start).toLocaleString("ja-JP"), pilot, position + 1, laps.length - 1, time];
+function _addRace2Result(
+    id: string,
+    round: number,
+    heat: number,
+    start: number,
+    pilot: string,
+    position: number,
+    time: number,
+    laps: number[],
+) {
+    const row =
+        race2ResultSheet
+            .getRange("A:A")
+            .getValues()
+            .findLastIndex((row) => row[0] !== "") + 2;
+    const value = [
+        id,
+        round,
+        heat,
+        new Date(start).toLocaleString("ja-JP"),
+        pilot,
+        position + 1,
+        laps.length - 1,
+        time,
+    ];
     race2ResultSheet.getRange(row, 1, 1, value.length).setValues([value]);
     race2ResultSheet.getRange(row, 11, 1, laps.length).setValues([laps]);
     race2ResultSheet.getRange(row, 4).setNumberFormat("H:mm:ss");

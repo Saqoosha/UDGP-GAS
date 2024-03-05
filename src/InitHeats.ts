@@ -79,10 +79,25 @@ function InitHeats() {
         heatNumber += heats.length;
     }
     // Race 2 - Double Elimination Tournament
-    const tournamentHeatCells = ["D3", "D9", "D15", "D21", "D27", "I6", "D33", "I18", "I24", "I30", "N12", "N27", "S22", "S16"];
+    const tournamentHeatCells = [
+        "D3",
+        "D9",
+        "D15",
+        "D21",
+        "D27",
+        "I6",
+        "D33",
+        "I18",
+        "I24",
+        "I30",
+        "N12",
+        "N27",
+        "S22",
+        "S16",
+    ];
     const heatCountForRace2 = tournamentHeatCells.length;
     _setHeats(row, 2, 0, heatNumber, heatCountForRace2);
-    for (let cell of tournamentHeatCells) {
+    for (const cell of tournamentHeatCells) {
         setTournmentHeatRef(row++, cell);
     }
     row++;
@@ -124,7 +139,7 @@ function _setHeats(
         heatListSheet.getRange(row, 3).setFormulaR1C1("=R[-2]C[0]+time(0,R3C14,0)");
         heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C14,0)");
     }
-    heatListSheet.getRange(row, 6, numHeats, 1).setFormulaR1C1("=IF(ISBLANK(R[0]C[-1]), \"\", (R[0]C[-1]-R[0]C[-3])*1440)");
+    heatListSheet.getRange(row, 6, numHeats, 1).setFormulaR1C1('=IF(ISBLANK(R[0]C[-1]), "", (R[0]C[-1]-R[0]C[-3])*1440)');
 
     // pilot
     if (heatStart === 1 && heats) {
@@ -145,21 +160,23 @@ function _setHeats(
  */
 function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
     const referenceSheetName = "Race 2 Tournament";
-    var startColumn = 'G'; // 数式を設定する開始列（この例では 'G' 列から開始）
-    var numberOfColumns = 4; // 設定する数式の列数
-    var formulas = [[]]; // 数式を格納する2次元配列を初期化
+    const startColumn = "G"; // 数式を設定する開始列（この例では 'G' 列から開始）
+    const numberOfColumns = 4; // 設定する数式の列数
+    const formulas = [[]]; // 数式を格納する2次元配列を初期化
 
     // 参照するセルの列名と行番号を抽出
-    var referenceColumn = referenceStartCell.match(/[A-Za-z]+/)[0];
-    var referenceRow = parseInt(referenceStartCell.match(/\d+/)[0], 10);
+    const referenceColumn = referenceStartCell.match(/[A-Za-z]+/)[0];
+    const referenceRow = parseInt(referenceStartCell.match(/\d+/)[0], 10);
 
     // 数式を生成
-    for (var i = 0; i < numberOfColumns; i++) {
-        var currentCell = referenceColumn + (referenceRow + i); // 現在の参照セルを計算
+    for (let i = 0; i < numberOfColumns; i++) {
+        const currentCell = referenceColumn + (referenceRow + i); // 現在の参照セルを計算
         formulas[0].push(`='${referenceSheetName}'!${currentCell}`); // 数式を配列に追加
     }
 
     // 範囲を指定して数式を設定
-    var range = heatListSheet.getRange(startColumn + startRow + ':' + String.fromCharCode(startColumn.charCodeAt(0) + numberOfColumns - 1) + startRow);
+    const range = heatListSheet.getRange(
+        `${startColumn + startRow}:${String.fromCharCode(startColumn.charCodeAt(0) + numberOfColumns - 1)}${startRow}`,
+    );
     range.setFormulas([formulas[0]]);
 }

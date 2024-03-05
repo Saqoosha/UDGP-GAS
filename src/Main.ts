@@ -60,7 +60,16 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
                     }
                     const stats = (data.results as RaceResult[])
                         .sort((a, b) => a.position - b.position)
-                        .map((result) => addOrUpdateRace1Result(data.id, data.start, result.pilot, result.position, result.time, result.laps));
+                        .map((result) =>
+                            addOrUpdateRace1Result(
+                                data.id,
+                                data.start,
+                                result.pilot,
+                                result.position,
+                                result.time,
+                                result.laps,
+                            ),
+                        );
                     console.log(stats);
                     calcRace1Result();
                     if (stats[0] === "added") {
@@ -105,13 +114,14 @@ function setHeatStartTime(timestamp: number) {
  * @param {string} heatNumber - 検索する値。
  * @return {number} - 見つかった行のインデックス。見つからなければ-1。
  */
-function findRowIndexByHeatNumber(heatNumber) {
-    var columnBValues = heatListSheet.getRange("B:B").getValues(); // B列の全ての値を取得
-    var rowIndex = -1; // 初期値は見つからなかった場合の-1
+function findRowIndexByHeatNumber(heatNumber: number): number {
+    const columnBValues = heatListSheet.getRange("B:B").getValues(); // B列の全ての値を取得
+    let rowIndex = -1; // 初期値は見つからなかった場合の-1
 
     // B列をループして値を検索
-    for (var i = 0; i < columnBValues.length; i++) {
-        if (columnBValues[i][0] === heatNumber) { // [i][0]は、i行目のB列の値
+    for (let i = 0; i < columnBValues.length; i++) {
+        if (columnBValues[i][0] === heatNumber) {
+            // [i][0]は、i行目のB列の値
             rowIndex = i + 1; // スプレッドシートの行は1から始まるので+1
             break; // 最初に見つかった行でループを終了
         }
@@ -125,9 +135,9 @@ function formatTimestampToTimeString(timestamp: number | string): string {
     const t = new Date(timestamp);
 
     // 時間、分、秒を取得し、2桁になるようにフォーマット
-    const hours = String(t.getHours()).padStart(2, '0');
-    const minutes = String(t.getMinutes()).padStart(2, '0');
-    const seconds = String(t.getSeconds()).padStart(2, '0');
+    const hours = String(t.getHours()).padStart(2, "0");
+    const minutes = String(t.getMinutes()).padStart(2, "0");
+    const seconds = String(t.getSeconds()).padStart(2, "0");
 
     // HH:MM:SS形式の文字列を作成
     return `${hours}:${minutes}:${seconds}`;
@@ -143,7 +153,8 @@ function formatTimestampToTimeString(timestamp: number | string): string {
 function PILOT_LOOKUP(rangeValues, searchKey) {
     // 指定された範囲で検索キーに一致する行を見つける
     for (let i = 0; i < rangeValues.length; i++) {
-        if (rangeValues[i][1] == searchKey) { // 2列目（順位など）が検索キーに一致するかチェック
+        if (rangeValues[i][1] === searchKey) {
+            // 2列目（順位など）が検索キーに一致するかチェック
             return rangeValues[i][0]; // 1列目（名前など）の値を返す
         }
     }
