@@ -26,6 +26,11 @@ function onEdit(e: GoogleAppsScript.Events.SheetsOnEdit) {
     }
 }
 
+function doGet(e: GoogleAppsScript.Events.DoGet) {
+    const data = getHeatList();
+    return ContentService.createTextOutput(JSON.stringify({ data: data })).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e: GoogleAppsScript.Events.DoPost) {
     // log
     {

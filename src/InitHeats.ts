@@ -169,7 +169,7 @@ function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
 
     // 参照するセルの列名と行番号を抽出
     const referenceColumn = referenceStartCell.match(/[A-Za-z]+/)[0];
-    const referenceRow = parseInt(referenceStartCell.match(/\d+/)[0], 10);
+    const referenceRow = Number.parseInt(referenceStartCell.match(/\d+/)[0], 10);
 
     // 数式を生成
     for (let i = 0; i < numberOfColumns; i++) {
@@ -182,4 +182,26 @@ function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
         `${startColumn + startRow}:${String.fromCharCode(startColumn.charCodeAt(0) + numberOfColumns - 1)}${startRow}`,
     );
     range.setFormulas([formulas[0]]);
+}
+
+function getHeatList() {
+    try {
+        const range = heatListSheet.getRange("A2:I");
+        const values = range.getValues();
+        let previousRace = "";
+        const data = values
+            .filter(([_, heat]) => heat && !Number.isNaN(heat))
+            .map((row) => {
+                const race = row[0] ? row[0].toString() : previousRace; // 空でない場合はその値を使用し、空の場合は前の値を使用
+                const heat = row[1].toString();
+                const pilots = row.slice(6).map((pilot) => pilot.toString()); // C-F列をスキップし、G列から開始
+                if (row[0]) previousRace = race; // 現在のラウンドが空でない場合、previousRoundを更新
+                return { round: race, heat, pilots };
+            });
+        console.log(data);
+        return data;
+    } catch (error) {
+        console.error("Error fetching heat list: ", error);
+        return [];
+    }
 }
