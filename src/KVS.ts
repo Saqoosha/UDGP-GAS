@@ -31,19 +31,19 @@ function setValueForKey(key: string, value: string | number): void {
 //
 
 function getNumChannels() {
-    return parseInt(getValueForKey("num channels")) || 4;
+    return Number.parseInt(getValueForKey("num channels")) || 4;
 }
 
 function getNumRoundForRace1() {
-    return parseInt(getValueForKey("num rounds of race 1")) || 0;
+    return Number.parseInt(getValueForKey("num rounds of race 1")) || 0;
 }
 
 function getNumRoundForRace2() {
-    return parseInt(getValueForKey("num rounds of race 2")) || 0;
+    return Number.parseInt(getValueForKey("num rounds of race 2")) || 0;
 }
 
 function getHeatsPerRound(round: number) {
-    return parseInt(getValueForKey(`heats per round ${round}`)) || 0;
+    return Number.parseInt(getValueForKey(`heats per round ${round}`)) || 0;
 }
 
 function setHeatsPerRound(round: number, num: number) {
@@ -59,7 +59,7 @@ function setRaceMode(mode: string) {
 }
 
 function getCurrentRound() {
-    return parseInt(getValueForKey("current round")) || 0;
+    return Number.parseInt(getValueForKey("current round")) || 0;
 }
 
 function setCurrentRound(num: number) {
@@ -73,7 +73,7 @@ function incrementRound() {
 }
 
 function getCurrentHeat() {
-    return parseInt(getValueForKey("current heat")) || 0;
+    return Number.parseInt(getValueForKey("current heat")) || 0;
 }
 
 function setCurrentHeat(num: number) {
