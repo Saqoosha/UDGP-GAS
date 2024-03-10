@@ -43,8 +43,8 @@ function doGet(e: GoogleAppsScript.Events.DoGet) {
 function doPost(e: GoogleAppsScript.Events.DoPost) {
     // log
     {
-        const lock = LockService.getDocumentLock();
-        lock.waitLock(20000);
+        // const lock = LockService.getDocumentLock();
+        // lock.waitLock(20000);
 
         const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log");
         sheet.getRange("1:1").insertCells(SpreadsheetApp.Dimension.ROWS);
@@ -53,7 +53,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
         sheet.getRange(1, 3).setValue(e.postData.contents);
 
         SpreadsheetApp.flush();
-        lock.releaseLock();
+        // lock.releaseLock();
     }
 
     const data = JSON.parse(e.postData.contents);
