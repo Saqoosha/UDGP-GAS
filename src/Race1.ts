@@ -318,29 +318,31 @@ function clearRace1AllResults() {
 }
 
 function sendDummyResult() {
-    const date = new Date();
-    const generateId = () => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        const seconds = String(date.getSeconds()).padStart(2, "0");
-        const milliseconds = String(date.getMilliseconds()).padStart(3, "0");
-        return `${year}${month}${day}${hours}${minutes}${seconds}${milliseconds}`;
-    };
-
     const heat = getCurrentHeat();
-    const row = findRowIndexByHeatNumber(heat);
-    const pilots = heatListSheet.getRange(row, 7, 1, 3).getValues()[0];
-    console.log({ heat, row, pilots });
+
+    const valeus = heatListSheet.getRange("A:B").getValues();
+    let race = "";
+    let rowIndex = 0;
+    for (let i = 0; i < valeus.length; i++) {
+        const row = valeus[i];
+        if (row[0]) {
+            race = row[0];
+        }
+        if (Number.parseInt(row[1]) === heat) {
+            rowIndex = i + 1;
+            break;
+        }
+    }
+
+    const pilots = heatListSheet.getRange(rowIndex, 7, 1, 3).getValues()[0];
+    console.log({ race, heat, rowIndex, pilots });
 
     const data = {
         action: "save",
         mode: "udgp-race",
-        class: "Race 1-1",
+        class: race,
         heat: `Heat ${heat}`,
-        start: date.getTime(),
+        start: new Date().getTime(),
         results: [
             {
                 pilot: pilots[0],
