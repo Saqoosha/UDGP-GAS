@@ -86,10 +86,10 @@ function calcRace1Result() {
         setRace1NextRoundHeatsByLaps(currentRound + 1, prevRoundData);
     }
 
-    const sheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
-    const style = SpreadsheetApp.newTextStyle().setBold(false).build();
-    sheet2.getRange("A2:H").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
-    sheet2.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
+    // const sheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
+    // const style = SpreadsheetApp.newTextStyle().setBold(false).build();
+    // sheet2.getRange("A2:H").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
+    // sheet2.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
 
     const sortedQualiResult = Object.keys(race1Result)
         .map((pilot) => {
@@ -202,36 +202,36 @@ function calcRoundRank(
 }
 
 function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
-    let row =
-        sheet
-            .getRange("B:B")
-            .getValues()
-            .findIndex((row) => row[0] === "") + 1;
+    // const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
+    // let row =
+    //     sheet
+    //         .getRange("B:B")
+    //         .getValues()
+    //         .findIndex((row) => row[0] === "") + 1;
 
     let totalLaps = 0;
     let totalTime = 0;
     for (let i = 0; i < records.length; i++) {
         const record = records[i];
         if (record) {
-            const penalty = [];
-            if (record.penalty) penalty.push("❌");
-            sheet
-                .getRange(row, 1, 1, 8)
-                .setValues([
-                    [
-                        record.round,
-                        record.datetime || "-",
-                        record.pilot,
-                        record.flightLaps,
-                        record.time,
-                        penalty.join(", "),
-                        record.resultLaps,
-                        record.isValid ? "✅" : "❌",
-                    ],
-                ])
-                .setFontColor(record.isValid ? "black" : "#b7b7b7")
-                .setBackground(record.isValid ? "white" : "#efefef");
+            // const penalty = [];
+            // if (record.penalty) penalty.push("❌");
+            // sheet
+            //     .getRange(row, 1, 1, 8)
+            //     .setValues([
+            //         [
+            //             record.round,
+            //             record.datetime || "-",
+            //             record.pilot,
+            //             record.flightLaps,
+            //             record.time,
+            //             penalty.join(", "),
+            //             record.resultLaps,
+            //             record.isValid ? "✅" : "❌",
+            //         ],
+            //     ])
+            //     .setFontColor(record.isValid ? "black" : "#b7b7b7")
+            //     .setBackground(record.isValid ? "white" : "#efefef");
             if (record.isValid) {
                 totalLaps += record.resultLaps;
             } else {
@@ -239,20 +239,20 @@ function addPilotResultsForRace1(pilot: string, records: RoundRecord[]) {
             }
             totalTime += record.time;
         } else {
-            sheet
-                .getRange(row, 1, 1, 8)
-                .setValues([[i + 1, "記録なし", "", "", "", "", "", ""]])
-                .setFontColor("#b7b7b7")
-                .setBackground("#efefef");
+            // sheet
+            //     .getRange(row, 1, 1, 8)
+            //     .setValues([[i + 1, "記録なし", "", "", "", "", "", ""]])
+            //     .setFontColor("#b7b7b7")
+            //     .setBackground("#efefef");
         }
-        row++;
+        // row++;
     }
-    const style = SpreadsheetApp.newTextStyle().setBold(true).build();
-    sheet.getRange(`A${row}:H${row}`).setBackground("#dcfbff").setTextStyle(style);
-    sheet.getRange(`B${row}:H${row + 1}`).setValues([
-        ["Total", pilot, "", totalTime, "", totalLaps, ""],
-        ["-", "", "", "", "", "", ""],
-    ]);
+    // const style = SpreadsheetApp.newTextStyle().setBold(true).build();
+    // sheet.getRange(`A${row}:H${row}`).setBackground("#dcfbff").setTextStyle(style);
+    // sheet.getRange(`B${row}:H${row + 1}`).setValues([
+    //     ["Total", pilot, "", totalTime, "", totalLaps, ""],
+    //     ["-", "", "", "", "", "", ""],
+    // ]);
     return { totalLaps, totalTime };
 }
 
@@ -298,12 +298,12 @@ function clearRace1RoundResult() {
         .setBorder(null, null, null, null, null, false);
 }
 
-function clearRace1PilotResult() {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
-    const style = SpreadsheetApp.newTextStyle().setBold(false).build();
-    sheet.getRange("A2:H").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
-    sheet.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
-}
+// function clearRace1PilotResult() {
+//     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（人別）");
+//     const style = SpreadsheetApp.newTextStyle().setBold(false).build();
+//     sheet.getRange("A2:H").clearContent().setTextStyle(style).setFontColor("black").setBackground(null);
+//     sheet.getRange("B:B").setNumberFormat("yyyy/mm/dd hh:mm:ss");
+// }
 
 function clearRace1TotalResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results（総合）");
@@ -312,7 +312,7 @@ function clearRace1TotalResult() {
 
 function clearRace1AllResults() {
     clearRace1RawResult();
-    clearRace1PilotResult();
+    // clearRace1PilotResult();
     clearRace1RoundResult();
     clearRace1TotalResult();
 }
@@ -397,7 +397,10 @@ function sendDummyResult() {
         method: "post",
         payload: JSON.stringify(data),
     };
+    const start = new Date().getTime();
     const response = UrlFetchApp.fetch(url, options);
+    const end = new Date().getTime();
+    Logger.log(`start: ${start}, end: ${end}, diff: ${end - start}`);
     const content = response.getContentText();
     Logger.log(content);
 }
