@@ -1,8 +1,17 @@
 const ss = SpreadsheetApp.getActiveSpreadsheet();
 const pilotsSheet = ss.getSheetByName("参加パイロット");
 const heatListSheet = ss.getSheetByName("組み合わせ / タイムスケジュール");
+const race1ResultSheet = ss.getSheetByName("Race 1 Results");
+const race2ResultSheet = ss.getSheetByName("Race 2 Results");
 const tournamentSheet = ss.getSheetByName("Race 2 Tournament");
 const dataSheet = ss.getSheetByName("data");
+
+interface RaceResult {
+    position: number;
+    pilot: string;
+    time: number;
+    laps: number[];
+}
 
 function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
     let lastIndex = -1;
@@ -52,51 +61,33 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
 
     let isSuccess = false;
 
-    switch (data.mode) {
-        case "udgp-race":
-            switch (getRaceMode()) {
+    if (data.mode === "udgp-race") {
+        try {
+            const heatNumber = Number.parseInt(data.heat.replace(/[^\d]/g, ""), 10);
+            setHeatStartTime(heatNumber, data.start);
+
+            const raceMode = data.class.split("-")[0];
+            switch (raceMode) {
                 case "Race 1": {
-                    setHeatStartTime(data.start);
-                    interface RaceResult {
-                        position: number;
-                        pilot: string;
-                        time: number;
-                        laps: number[];
-                    }
-                    const stats = (data.results as RaceResult[])
-                        .sort((a, b) => a.position - b.position)
-                        .map((result) =>
-                            addOrUpdateRace1Result(
-                                data.id,
-                                data.start,
-                                result.pilot,
-                                result.position,
-                                result.time,
-                                result.laps,
-                            ),
-                        );
-                    console.log(stats);
+                    const roundNumber = Number.parseInt(data.class.split("-")[1]);
+                    addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.results);
                     calcRace1Result();
-                    if (stats[0] === "added") {
-                        const nextHeat = incrementHeat();
-                        if (nextHeat % getHeatsPerRound(1) === 1) {
-                            const nextRound = incrementRound();
-                            if (nextRound > getNumRoundForRace1()) {
-                                setRaceMode("Race 2");
-                                setCurrentRound(1);
-                            }
-                        }
-                    }
-                    isSuccess = true;
                     break;
                 }
-                case "Race 2":
-                    setHeatStartTime(data.start);
-                    addRace2Results(data.id, data.start, data.results);
+                case "Race 2": {
+                    addOrUpdateResult(race2ResultSheet, 1, heatNumber, data.results);
                     break;
+                }
             }
+
+            if (data.action === "save") {
+                setCurrentHeat(heatNumber + 1);
+            }
+
             isSuccess = true;
-            break;
+        } catch (e) {
+            console.log(e);
+        }
     }
 
     const output = ContentService.createTextOutput(JSON.stringify({ success: isSuccess }));
@@ -104,10 +95,10 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     return output;
 }
 
-function setHeatStartTime(timestamp: number) {
-    const heat = getCurrentHeat();
-    const row = findRowIndexByHeatNumber(heat);
+function setHeatStartTime(heatNumber: number, timestamp: number) {
+    const row = findRowIndexByHeatNumber(heatNumber);
     if (row === -1) {
+        console.log("setHeatStartTime: row not found", heatNumber);
         return;
     }
     const t = new Date(timestamp);
@@ -126,7 +117,7 @@ function findRowIndexByHeatNumber(heatNumber: number): number {
 
     // B列をループして値を検索
     for (let i = 0; i < columnBValues.length; i++) {
-        if (columnBValues[i][0] === heatNumber) {
+        if (Number.parseInt(columnBValues[i][0]) === heatNumber) {
             // [i][0]は、i行目のB列の値
             rowIndex = i + 1; // スプレッドシートの行は1から始まるので+1
             break; // 最初に見つかった行でループを終了
@@ -147,24 +138,4 @@ function formatTimestampToTimeString(timestamp: number | string): string {
 
     // HH:MM:SS形式の文字列を作成
     return `${hours}:${minutes}:${seconds}`;
-}
-
-/**
- * 指定された範囲内で検索キーに一致する行を見つけ、その行の特定の列の値を返す。
- *
- * @param {Array[]} rangeValues - 検索する範囲の値（例: C2:D5の値）。
- * @param {string} searchKey - 検索するキー（例: B26の値）。
- * @return {string} 検索に一致した行の特定の列の値または空文字列。
- */
-function PILOT_LOOKUP(rangeValues, searchKey) {
-    // 指定された範囲で検索キーに一致する行を見つける
-    for (let i = 0; i < rangeValues.length; i++) {
-        if (rangeValues[i][1] === searchKey) {
-            // 2列目（順位など）が検索キーに一致するかチェック
-            return rangeValues[i][0]; // 1列目（名前など）の値を返す
-        }
-    }
-
-    // 一致する値が見つからない場合は空文字列を返す
-    return "";
 }

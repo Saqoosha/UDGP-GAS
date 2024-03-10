@@ -1,18 +1,17 @@
 function findOrAddRow(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
-    id: string,
+    heatNumber: number,
     pilotName: string,
 ): [number, "found" | "added"] {
     // 全ての値を取得
-    const values = sheet.getRange("A:D").getValues();
+    const values = sheet.getRange("B:C").getValues();
 
-    // IDとPilotNameで一致するrowを検索
-    // for (let i = 0; i < values.length; i++) {
-    //     const [rowId, , , rowPilotName] = values[i];
-    //     if (rowId === id && rowPilotName === pilotName) {
-    //         return [i + 1, "found"]; // rowインデックスは1から始まるため
-    //     }
-    // }
+    for (let i = 0; i < values.length; i++) {
+        const row = values[i];
+        if (Number.parseInt(row[0]) === heatNumber && row[1] === pilotName) {
+            return [i + 1, "found"]; // rowインデックスは1から始まるため
+        }
+    }
 
     // IDが未設定のrowを探す
     for (let i = 0; i < values.length; i++) {
@@ -26,42 +25,24 @@ function findOrAddRow(
     return [values.length + 1, "added"];
 }
 
-function addOrUpdateRace1Result(
-    id: string,
-    start: number,
-    pilot: string,
-    position: number,
-    time: number,
-    laps: number[],
+function addOrUpdateResult(
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    roundNumber: number,
+    heatNumber: number,
+    records: RaceRecord[],
 ) {
-    const lock = LockService.getDocumentLock();
-    lock.waitLock(20000);
-
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
-    const [row, foundOrAdded] = findOrAddRow(sheet, id, pilot);
-    const round = getCurrentRound();
-    const heat = getCurrentHeat();
-    const startStr = new Date(start).toLocaleString("ja-JP");
-    const value = [id, round, heat, startStr, pilot, position + 1, laps.length - 1, time];
-    sheet.getRange(row, 1, 1, value.length).setValues([value]);
-    sheet.getRange(row, 11, 1, laps.length).setValues([
-        laps.map((lap, index) => {
-            if (lap === 0) {
-                return "-";
-            }
-            if (index > 0 && laps[index - 1] === 0) {
-                // return `(${lap.toFixed(2)})`;
-                return "-";
-            }
-            return lap;
-        }),
-    ]);
-    sheet.getRange(row, 4).setNumberFormat("H:mm:ss");
+    const sorted = records.sort((a, b) => a.position - b.position);
+    for (const record of sorted) {
+        const { pilot, position, laps, time } = record;
+        const [row, foundOrAdded] = findOrAddRow(sheet, heatNumber, pilot);
+        const value = [roundNumber, heatNumber, pilot, position + 1, laps.length - 1, time];
+        sheet.getRange(row, 1, 1, value.length).setValues([value]);
+        sheet.getRange(row, 9, 1, laps.length).setValues([laps]);
+    }
 
     SpreadsheetApp.flush();
-    lock.releaseLock();
 
-    return foundOrAdded;
+    return;
 }
 
 function calcRace1Result() {
@@ -78,11 +59,12 @@ function calcRace1Result() {
         }
     };
 
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     let currentRound = 1;
     let roundData: { [key: string]: RoundRecord } = {};
     let prevRoundData: RoundRecord[];
-    for (const row of sheet.getRange(2, 2, sheet.getMaxRows(), sheet.getMaxColumns()).getValues()) {
+    for (const row of race1ResultSheet
+        .getRange(2, 1, race1ResultSheet.getMaxRows(), race1ResultSheet.getMaxColumns())
+        .getValues()) {
         if (row[0] === "") {
             break;
         }
@@ -175,7 +157,7 @@ function calcRoundRank(
                     index + 1,
                     record.pilot,
                     "",
-                    record.fastestLapTime === Infinity ? "" : record.fastestLapTime,
+                    record.fastestLapTime === Number.POSITIVE_INFINITY ? "" : record.fastestLapTime,
                 ]),
             );
     } else {
@@ -295,10 +277,9 @@ function setRace1Heats(round: number, pilots: string[]) {
 
 function clearRace1RawResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
-    sheet.getRange("A2:H").clearContent();
-    sheet.getRange("I2:I").setValue(false);
-    sheet.getRange("J2:J").setValue("=IF(I2=TRUE, G2-2, G2)");
-    sheet.getRange("K2:AK").clearContent();
+    sheet.getRange("A2:AK").clearContent();
+    sheet.getRange("G2:G").setValue(false);
+    sheet.getRange("H2:H").setValue("=IF(G2=TRUE, E2-2, E2)");
 }
 
 function clearRace1RoundResult() {
@@ -355,8 +336,10 @@ function sendDummyResult() {
     console.log({ heat, row, pilots });
 
     const data = {
-        id: generateId(),
+        action: "save",
         mode: "udgp-race",
+        class: "Race 1-1",
+        heat: `Heat ${heat}`,
         start: date.getTime(),
         results: [
             {
@@ -379,6 +362,33 @@ function sendDummyResult() {
             },
         ],
     };
+    // const data = {
+    //     action: "save",
+    //     mode: "udgp-race",
+    //     class: "Race 2",
+    //     heat: "Heat 31",
+    //     start: 1710078174000,
+    //     results: [
+    //         {
+    //             pilot: "Saqoosha",
+    //             position: 0,
+    //             time: 32.51315676099989,
+    //             laps: [1.1247225950000939, 17.692627395999807, 13.695806769999988],
+    //         },
+    //         {
+    //             pilot: "YASHIMA",
+    //             position: 1,
+    //             time: 33.184177482,
+    //             laps: [1.692337705, 16.42504151200001, 15.06679826499999],
+    //         },
+    //         {
+    //             pilot: "A",
+    //             position: 2,
+    //             time: 33.94902914199997,
+    //             laps: [2.3452185379999264, 15.002039916000058, 16.601770687999984],
+    //         },
+    //     ],
+    // };
 
     const url =
         "https://script.google.com/macros/s/AKfycbxDxX9w3id9vP5mFTglSVQ7REkMlPgZ-Jo4Z_zsgruQJ-bBR3y8E6CaAqEgtxeZphatEA/exec";
