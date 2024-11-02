@@ -88,14 +88,11 @@ function InitHeats() {
         "D28",
         "D33",
         "D38",
-        "D43",
-        "D48",
         "I12",
         "I18",
+        "I28",
         "I33",
-        "I38",
-        "I43",
-        "N33",
+        "N28",
         "N15",
     ];
     const heatCountForRace2 = tournamentHeatCells.length;

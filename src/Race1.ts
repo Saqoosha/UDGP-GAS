@@ -141,15 +141,17 @@ function calcRoundRank(
             const record = sortedByLaps[i];
             record.isValid = true;
             sheet.getRange(3 + i, 1, 1, 4).setValues([[i + 1, record.pilot, record.resultLaps, record.time]]);
-            sheet.getRange(3 + i, 3, 1, 2).setBackground("#b8f9b5");
+            // sheet.getRange(3 + i, 3, 1, 2).setBackground("#b8f9b5");
         }
-        const t = findLastIndex(sortedByLaps, (data) => data.resultLaps === current5thLap);
-        if (t >= 0) {
-            sheet
-                .getRange(3 + t, 1, 1, 5)
-                .setBorder(null, null, true, null, null, null, "#93c47c", SpreadsheetApp.BorderStyle.SOLID_THICK);
-        }
-        sheet.getRange(22, 1, 18, 4).clearContent();
+        // const t = findLastIndex(sortedByLaps, (data) => data.resultLaps === current5thLap);
+        // if (t >= 0) {
+        //     sheet
+        //         .getRange(3 + t, 1, 1, 5)
+        //         .setBorder(null, null, true, null, null, null, "#93c47c", SpreadsheetApp.BorderStyle.SOLID_THICK);
+        // }
+        sheet
+            .getRange(22, 1, 18, 4)
+            .clearContent();
         sheet
             .getRange(22, 1, sortedByFastest.length, 4)
             .setValues(
@@ -161,42 +163,40 @@ function calcRoundRank(
                 ]),
             );
     } else {
-        const column = 6 + (roundIndex - 2) * 6;
+        const column = 6 + (roundIndex - 2) * 5;
         sheet
-            .getRange(3, column, 18, 6)
+            .getRange(3, column, 18, 5)
             .clearContent()
             .setFontColor(null)
             .setBackground(null)
             .setBorder(null, null, null, null, false, false);
-        const prev5thLap = prevRoundRecords.length > 4 ? prevRoundRecords[4].resultLaps : 0;
+        // const prev5thLap = prevRoundRecords.length > 4 ? prevRoundRecords[4].resultLaps : 0;
         for (let i = 0; i < sortedByLaps.length; i++) {
             const record = sortedByLaps[i];
-            const prevRank = prevRoundRecords.findIndex((row) => row.pilot === record.pilot);
-            const prevLap = prevRank >= 0 ? prevRoundRecords[prevRank].resultLaps : -1;
-            sheet
-                .getRange(3 + i, column, 1, 5)
-                .setValues([[i + 1, record.pilot, prevLap < 0 ? "-" : prevLap, record.resultLaps, record.time]]);
-            if (prevLap >= prev5thLap) {
-                record.isValid = record.resultLaps >= prevLap;
-                sheet.getRange(3 + i, column + 2).setBackground("#fff862");
-            } else {
-                record.isValid = true;
-                sheet.getRange(3 + i, column + 2).setFontColor("#BBBBBB");
-            }
-            sheet.getRange(3 + i, column + 3, 1, 2).setBackground(record.isValid ? "#b8f9b5" : "#ff92b0");
+            // const prevRank = prevRoundRecords.findIndex((row) => row.pilot === record.pilot);
+            // const prevLap = prevRank >= 0 ? prevRoundRecords[prevRank].resultLaps : -1;
+            sheet.getRange(3 + i, column, 1, 4).setValues([[i + 1, record.pilot, record.resultLaps, record.time]]);
+            // if (prevLap >= prev5thLap) {
+            //     record.isValid = record.resultLaps >= prevLap;
+            //     sheet.getRange(3 + i, column + 2).setBackground("#fff862");
+            // } else {
+            record.isValid = true;
+            // sheet.getRange(3 + i, column + 2).setFontColor("#BBBBBB");
+            // }
+            // sheet.getRange(3 + i, column + 3, 1, 2).setBackground(record.isValid ? "#b8f9b5" : "#ff92b0");
         }
-        const t = findLastIndex(sortedByLaps, (data) => data.resultLaps === current5thLap);
-        if (t >= 0) {
-            sheet
-                .getRange(3 + t, column, 1, 6)
-                .setBorder(null, null, true, null, null, null, "#93c47c", SpreadsheetApp.BorderStyle.SOLID_THICK);
-        }
-        sheet.getRange(22, column, 18, 5).clearContent();
+        // const t = findLastIndex(sortedByLaps, (data) => data.resultLaps === current5thLap);
+        // if (t >= 0) {
+        //     sheet
+        //         .getRange(3 + t, column, 1, 6)
+        //         .setBorder(null, null, true, null, null, null, "#93c47c", SpreadsheetApp.BorderStyle.SOLID_THICK);
+        // }
         sheet
-            .getRange(22, column, sortedByFastest.length, 5)
-            .setValues(
-                sortedByFastest.map((record, index) => [index + 1, record.pilot, "", "", record.fastestLapTime]),
-            );
+            .getRange(22, column, 18, 4)
+            .clearContent();
+        sheet
+            .getRange(22, column, sortedByFastest.length, 4)
+            .setValues(sortedByFastest.map((record, index) => [index + 1, record.pilot, "", record.fastestLapTime]));
     }
     return sortedByLaps;
 }
@@ -362,7 +362,7 @@ function sendDummyResult() {
                 time: 66 + Math.random(),
                 laps: [3.433, 29.56, 31.205],
             },
-        ],
+        ].filter((result) => result.pilot !== ""),
     };
     // const data = {
     //     action: "save",
