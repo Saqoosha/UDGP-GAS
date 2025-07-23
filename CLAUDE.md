@@ -58,6 +58,16 @@ clasp deployments
 
 ## Code Architecture
 
+### TypeScript Bundle Architecture
+
+**CRITICAL**: All TypeScript source files are compiled into a single `bundle.js` file to avoid Google Apps Script file loading order issues. This eliminates "SheetService is not defined" and similar errors.
+
+Key architectural components:
+- **App.ts** - Global namespace that initializes all services
+- **Service Classes** - SheetService, HeatGenerator, RaceResultProcessor, BatchUpdater
+- **Constants** - Centralized configuration in Constants.ts
+- **Type Safety** - Comprehensive TypeScript interfaces in DataModels.ts
+
 ### Google Sheets Integration
 The system operates on a Google Spreadsheet with the following sheets:
 - `参加パイロット` (Pilots) - List of participating pilots
@@ -71,29 +81,39 @@ The system operates on a Google Spreadsheet with the following sheets:
 
 ### Core Components
 
-1. **Main.ts** - Entry point with:
+1. **App.ts** - Global application namespace:
+   - Lazy initialization of all services and sheet references
+   - Single point of access for all components
+   - Prevents initialization order issues
+
+2. **Main.ts** - Entry point with:
    - `doGet()` - Returns heat list as JSON
    - `doPost()` - Receives race results and updates sheets
    - `onEdit()` - Triggers result calculations on sheet edits
 
-2. **InitHeats.ts** - Heat generation logic:
-   - `InitHeats()` - Main function to generate all heats for the event
-   - `generateHeats()` - Algorithm to distribute pilots across heats
+3. **Service Classes**:
+   - **SheetService** - Centralized sheet access and column definitions
+   - **HeatGenerator** - Configurable heat generation algorithms
+   - **RaceResultProcessor** - Result calculation and ranking logic
+   - **BatchUpdater** - Optimized batch operations for Google Sheets API
+
+4. **InitHeats.ts** - Heat generation logic:
+   - Uses HeatGenerator service for pilot distribution
    - Handles 3 or 4 channel configurations with optimal pilot distribution
 
-3. **Race1.ts** - Race 1 (qualifying) logic:
-   - `calcRace1Result()` - Calculates rankings based on laps and time
+5. **Race1.ts** - Race 1 (qualifying) logic:
+   - Uses RaceResultProcessor for calculations
    - Supports multiple rounds with heat reassignment
    - Uses lap count as primary ranking, time as tiebreaker
-   - **Important**: Results sheet now includes start time in column C
+   - **Important**: Inline border addition for performance
 
-4. **KVS.ts** - Key-value storage using the data sheet:
-   - Configuration parameters like number of channels, rounds, current heat
+6. **KVS.ts** - Key-value storage using the data sheet:
+   - Configuration parameters with Constants.ts
    - Caching layer using Google's CacheService
 
-5. **Data Models**:
-   - `RaceRecord` - Individual pilot's race performance
-   - `RoundRecord` - Processed round results with rankings
+7. **Data Models**:
+   - `DataModels.ts` - TypeScript interfaces for type safety
+   - `RoundRecord.ts` - Processed round results with rankings
 
 ### Race Modes
 
@@ -103,7 +123,8 @@ The system supports two race formats:
 
 ### Important Implementation Details
 
-- The project uses TypeScript with Google Apps Script type definitions
+- **TypeScript Bundle**: All source files compile into single `bundle.js` to avoid loading order issues
+- **tsconfig.json**: Uses `"outFile": "./dist/bundle.js"` for bundling
 - Biome is configured for code formatting (4 spaces, 120 line width)
 - Sheet row/column indices are 1-based (Google Sheets convention)
 - Locking mechanism (`LockService`) prevents concurrent modifications
@@ -111,32 +132,49 @@ The system supports two race formats:
 - The web app is configured for anonymous access (`ANYONE_ANONYMOUS`)
 - TypeScript compiles to ES2020 with no module system (GAS requirement)
 - Built files go to `dist/` directory, source files in `src/`
+- **Performance**: Borders added inline during data insertion, not post-processing
+- **Time Format**: Display as `h:mm:ss` only (not full datetime)
 
 ## Common Development Tasks
 
-When modifying the heat generation algorithm, focus on:
-- [@src/InitHeats.ts](src/InitHeats.ts) - `generateHeats()` function handles pilot distribution
-- Channel configurations are stored in KVS: 3 channels (5705, 5740, 5800) or 4 channels (5695, 5725, 5790, 5820)
+### Fixing TypeScript Loading Issues
+If you encounter "SheetService is not defined" or similar errors:
+1. Run `npm run build` to regenerate the bundle
+2. Run `npm run push` to upload to GAS
+3. The bundle approach ensures all dependencies load in correct order
 
-When working with race results:
-- [@src/Race1.ts](src/Race1.ts) - Contains all Race 1 result processing logic
-- Results are ranked by: 1) lap count (descending), 2) total time (ascending)
-- Penalty laps are handled by the `penalty` boolean field
+### Modifying Heat Generation
+- [@src/HeatGenerator.ts](src/HeatGenerator.ts) - Service class for heat generation algorithms
+- [@src/InitHeats.ts](src/InitHeats.ts) - Uses HeatGenerator.generate() for pilot distribution
+- Channel configurations: 3 channels (5705, 5740, 5800) or 4 channels (5695, 5725, 5790, 5820)
 
-For API integration:
+### Working with Race Results
+- [@src/Race1.ts](src/Race1.ts) - Uses RaceResultProcessor service
+- [@src/RaceResultProcessor.ts](src/RaceResultProcessor.ts) - Core ranking logic
+- Results ranked by: 1) lap count (descending), 2) total time (ascending)
+- Borders added inline during data insertion for performance
+
+### API Integration
 - [@src/Main.ts](src/Main.ts) - `doPost()` handles incoming race data
 - Expected format: `{ mode: "udgp-race", class: "Race 1-1", heat: "Heat 1", start: timestamp, results: [...] }`
+- Uses SheetService.COLUMNS for consistent column references
+
+### Testing
+Test scripts in `test/` directory:
+- `send-heat.js` - Send individual heat data
+- `send-all-heats.sh` - Batch send all heats
+- Run from project root: `node test/send-heat.js 1`
 
 ### Race 1 Results Sheet Column Layout
 
-After recent updates, the Race 1 Results sheet uses the following columns:
-- A: Round number
-- B: Heat number  
-- C: Race start time (Japanese time format)
-- D: Pilot name
-- E: Position
-- F: Lap count
-- G: Total time
-- H: Penalty flag
-- I: Result laps (calculated)
-- J+: Individual lap times
+Column definitions are centralized in SheetService.COLUMNS.RACE1_RESULTS:
+- A: Round number (ROUND)
+- B: Heat number (HEAT)
+- C: Race start time (START_TIME) - displays as h:mm:ss
+- D: Pilot name (PILOT)
+- E: Position (POSITION)
+- F: Lap count (LAP_COUNT)
+- G: Total time (TOTAL_TIME)
+- H: Penalty flag (PENALTY)
+- I: Result laps (RESULT_LAPS) - calculated
+- J+: Individual lap times (LAP_TIMES_START)
