@@ -1,17 +1,13 @@
-const ss = SpreadsheetApp.getActiveSpreadsheet();
-const pilotsSheet = ss.getSheetByName("参加パイロット");
-const heatListSheet = ss.getSheetByName("組み合わせ / タイムスケジュール");
-const race1ResultSheet = ss.getSheetByName("Race 1 Results");
-const race2ResultSheet = ss.getSheetByName("Race 2 Results");
-const tournamentSheet = ss.getSheetByName("Race 2 Tournament");
-const dataSheet = ss.getSheetByName("data");
+// Initialize sheet service
+const sheets = SheetService.getInstance();
 
-interface RaceResult {
-    position: number;
-    pilot: string;
-    time: number;
-    laps: number[];
-}
+// Get sheet references through service
+const pilotsSheet = sheets.getPilotsSheet();
+const heatListSheet = sheets.getHeatListSheet();
+const race1ResultSheet = sheets.getRace1ResultSheet();
+const race2ResultSheet = sheets.getRace2ResultSheet();
+const tournamentSheet = sheets.getTournamentSheet();
+const dataSheet = sheets.getDataSheet();
 
 function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
     let lastIndex = -1;
@@ -26,10 +22,10 @@ function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
 
 function onEdit(e: GoogleAppsScript.Events.SheetsOnEdit) {
     switch (e.range.getSheet().getName()) {
-        case "Race 1 Results":
+        case SheetService.SHEETS.RACE1_RESULTS:
             calcRace1Result();
             break;
-        // case "Race 2 Results":
+        // case SheetService.SHEETS.RACE2_RESULTS:
         //     calcRace2Result();
         //     break;
     }
@@ -41,58 +37,81 @@ function doGet(e: GoogleAppsScript.Events.DoGet) {
 }
 
 function doPost(e: GoogleAppsScript.Events.DoPost) {
-    // log
-    {
-        // const lock = LockService.getDocumentLock();
-        // lock.waitLock(20000);
-
-        const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Log");
-        sheet.getRange("1:1").insertCells(SpreadsheetApp.Dimension.ROWS);
-        sheet.getRange(1, 1).setValue(new Date().toLocaleString("ja-JP"));
-        sheet.getRange(1, 2).setValue(e);
-        sheet.getRange(1, 3).setValue(e.postData.contents);
-
-        SpreadsheetApp.flush();
-        // lock.releaseLock();
+    try {
+        logRequest(e);
+        const data = validateAndParsePostData(e);
+        const result = processRaceData(data);
+        return createSuccessResponse(result);
+    } catch (error) {
+        console.error("Error in doPost:", error);
+        return createErrorResponse(error.message);
     }
+}
 
-    const data = JSON.parse(e.postData.contents);
-    console.log(data);
+function validateAndParsePostData(e: GoogleAppsScript.Events.DoPost): PostData {
+    if (!e.postData?.contents) {
+        throw new Error("No post data received");
+    }
+    
+    const data = JSON.parse(e.postData.contents) as PostData;
+    
+    if (!data.mode || !data.heat || !data.results) {
+        throw new Error("Invalid race data format");
+    }
+    
+    return data;
+}
 
-    let isSuccess = false;
-
-    if (data.mode === "udgp-race") {
-        try {
-            const heatNumber = Number.parseInt(data.heat.replace(/[^\d]/g, ""), 10);
-            setHeatStartTime(heatNumber, data.start);
-
-            const raceMode = data.class.split("-")[0];
-            switch (raceMode) {
-                case "Race 1": {
-                    const roundNumber = Number.parseInt(data.class.split("-")[1]);
-                    addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.start, data.results);
-                    calcRace1Result();
-                    break;
-                }
-                case "Race 2": {
-                    addOrUpdateResult(race2ResultSheet, 1, heatNumber, data.start, data.results);
-                    break;
-                }
-            }
-
-            if (data.action === "save") {
-                setCurrentHeat(heatNumber + 1);
-            }
-
-            isSuccess = true;
-        } catch (e) {
-            console.log(e);
+function processRaceData(data: PostData): ApiResponse {
+    if (data.mode !== "udgp-race") {
+        throw new Error(`Unknown mode: ${data.mode}`);
+    }
+    
+    const heatNumber = Number.parseInt(data.heat.replace(/[^\d]/g, ""), 10);
+    setHeatStartTime(heatNumber, data.start);
+    
+    const raceMode = data.class.split("-")[0];
+    switch (raceMode) {
+        case RACE_CONSTANTS.RACE_MODES.RACE_1: {
+            const roundNumber = Number.parseInt(data.class.split("-")[1]);
+            addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.start, data.results);
+            calcRace1Result();
+            break;
         }
+        case RACE_CONSTANTS.RACE_MODES.RACE_2: {
+            addOrUpdateResult(race2ResultSheet, 1, heatNumber, data.start, data.results);
+            break;
+        }
+        default:
+            throw new Error(`Unknown race mode: ${raceMode}`);
     }
+    
+    if (data.action === "save") {
+        setCurrentHeat(heatNumber + 1);
+    }
+    
+    return { success: true };
+}
 
-    const output = ContentService.createTextOutput(JSON.stringify({ success: isSuccess }));
+function createSuccessResponse(result: ApiResponse): GoogleAppsScript.Content.TextOutput {
+    const output = ContentService.createTextOutput(JSON.stringify(result));
     output.setMimeType(ContentService.MimeType.JSON);
     return output;
+}
+
+function createErrorResponse(error: string): GoogleAppsScript.Content.TextOutput {
+    const output = ContentService.createTextOutput(JSON.stringify({ success: false, error }));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
+}
+
+function logRequest(e: GoogleAppsScript.Events.DoPost): void {
+    const logSheet = sheets.getLogSheet();
+    logSheet.getRange("1:1").insertCells(SpreadsheetApp.Dimension.ROWS);
+    logSheet.getRange(1, 1).setValue(new Date().toLocaleString(RACE_CONSTANTS.TIME_FORMAT.LOCALE));
+    logSheet.getRange(1, 2).setValue(e);
+    logSheet.getRange(1, 3).setValue(e.postData?.contents || "");
+    SpreadsheetApp.flush();
 }
 
 function setHeatStartTime(heatNumber: number, timestamp: number) {
@@ -102,40 +121,26 @@ function setHeatStartTime(heatNumber: number, timestamp: number) {
         return;
     }
     const t = new Date(timestamp);
-    heatListSheet.getRange(row, 4).setValue(t);
-    heatListSheet.getRange(row, 5).setValue(formatTimestampToTimeString(timestamp));
+    heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.START_TIME).setValue(t);
+    heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.ACTUAL_TIME).setValue(formatTimestampToTimeString(timestamp));
 }
 
-/**
- * B列で特定の値を検索し、最初に見つかった行のインデックスを返す。
- * @param {string} heatNumber - 検索する値。
- * @return {number} - 見つかった行のインデックス。見つからなければ-1。
- */
 function findRowIndexByHeatNumber(heatNumber: number): number {
-    const columnBValues = heatListSheet.getRange("B:B").getValues(); // B列の全ての値を取得
-    let rowIndex = -1; // 初期値は見つからなかった場合の-1
-
-    // B列をループして値を検索
+    const columnBValues = heatListSheet.getRange("B:B").getValues();
+    
     for (let i = 0; i < columnBValues.length; i++) {
         if (Number.parseInt(columnBValues[i][0]) === heatNumber) {
-            // [i][0]は、i行目のB列の値
-            rowIndex = i + 1; // スプレッドシートの行は1から始まるので+1
-            break; // 最初に見つかった行でループを終了
+            return i + 1; // Sheet rows are 1-indexed
         }
     }
-
-    return rowIndex;
+    
+    return -1;
 }
 
 function formatTimestampToTimeString(timestamp: number | string): string {
-    // Dateオブジェクトを生成
     const t = new Date(timestamp);
-
-    // 時間、分、秒を取得し、2桁になるようにフォーマット
     const hours = String(t.getHours()).padStart(2, "0");
     const minutes = String(t.getMinutes()).padStart(2, "0");
     const seconds = String(t.getSeconds()).padStart(2, "0");
-
-    // HH:MM:SS形式の文字列を作成
     return `${hours}:${minutes}:${seconds}`;
 }

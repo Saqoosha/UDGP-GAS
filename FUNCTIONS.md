@@ -1,15 +1,54 @@
 # UDGP-GAS 関数一覧
 
-## Main.ts - メインエントリーポイント
+## アーキテクチャ改善
 
-### グローバル変数
-- `ss` - アクティブなスプレッドシート
-- `pilotsSheet` - 参加パイロットシート
-- `heatListSheet` - 組み合わせ/タイムスケジュールシート
-- `race1ResultSheet` - Race 1結果シート
-- `race2ResultSheet` - Race 2結果シート
-- `tournamentSheet` - Race 2トーナメントシート
-- `dataSheet` - データシート
+### 新しいサービスクラス
+
+#### SheetService.ts - シートアクセスの一元化
+- `getInstance()` - シングルトンインスタンスを取得
+- `getPilotsSheet()` - 参加パイロットシートを取得
+- `getHeatListSheet()` - 組み合わせ/タイムスケジュールシートを取得
+- `getRace1ResultSheet()` - Race 1結果シートを取得
+- `getRace2ResultSheet()` - Race 2結果シートを取得
+- `getTournamentSheet()` - Race 2トーナメントシートを取得
+- `getDataSheet()` - データシートを取得
+- `getRace1RoundSheet()` - Race 1ラウンド別結果シートを取得
+- `getRace1TotalSheet()` - Race 1総合結果シートを取得
+- `getLogSheet()` - ログシートを取得
+
+#### HeatGenerator.ts - ヒート生成ロジック
+- `generate(pilots: string[], numChannels: number)` - ヒートを生成
+- `getChannelNames(numChannels: number)` - チャンネル名を取得
+
+#### RaceResultProcessor.ts - レース結果処理
+- `processRoundResults(records: RoundRecord[])` - ラウンド結果を処理
+- `calculateOverallRanking(pilotResults: Map<string, ProcessedResult[]>)` - 総合順位を計算
+
+#### BatchUpdater.ts - バッチ更新処理
+- `addValues(range, values)` - 値の更新を追加
+- `addFormulas(range, formulas)` - 数式の更新を追加
+- `addFormat(range, format)` - フォーマットの更新を追加
+- `addClear(range, options)` - クリア操作を追加
+- `execute()` - バッチ更新を実行
+
+### 定数定義
+
+#### Constants.ts
+- `RACE_CONSTANTS` - レース関連の定数
+- `CHANNEL_CONFIGS` - チャンネル設定
+- `SHEET_FORMULAS` - シート数式
+- `RaceMode` - レースモード列挙
+- `ChannelConfig` - チャンネル設定列挙
+
+#### DataModels.ts
+- `RaceResult` - レース結果インターフェース
+- `HeatAssignment` - ヒート割り当てインターフェース
+- `RaceConfiguration` - レース設定インターフェース
+- `ProcessedResult` - 処理済み結果インターフェース
+- `PostData` - POSTデータインターフェース
+- `ApiResponse` - APIレスポンスインターフェース
+
+## Main.ts - メインエントリーポイント
 
 ### 関数
 
@@ -24,10 +63,24 @@ HTTPのGETリクエストハンドラー。ヒートリストをJSON形式で返
 
 #### `doPost(e: GoogleAppsScript.Events.DoPost)`
 HTTPのPOSTリクエストハンドラー。レース結果を受信して処理
-- ログ記録
-- ヒート開始時刻の設定
-- レース結果の保存
-- 現在のヒート番号の更新
+- エラーハンドリングの改善
+- 入力検証の追加
+- 構造化されたレスポンス
+
+#### `validateAndParsePostData(e: GoogleAppsScript.Events.DoPost): PostData`
+POSTデータの検証と解析
+
+#### `processRaceData(data: PostData): ApiResponse`
+レースデータの処理
+
+#### `createSuccessResponse(result: ApiResponse)`
+成功レスポンスの生成
+
+#### `createErrorResponse(error: string)`
+エラーレスポンスの生成
+
+#### `logRequest(e: GoogleAppsScript.Events.DoPost)`
+リクエストのログ記録
 
 #### `setHeatStartTime(heatNumber: number, timestamp: number)`
 指定されたヒートの開始時刻を記録
@@ -41,9 +94,7 @@ HTTPのPOSTリクエストハンドラー。レース結果を受信して処理
 ## InitHeats.ts - ヒート初期化
 
 #### `generateHeats(pilots: string[], numChannels: number): string[][]`
-パイロットを指定されたチャンネル数に応じてヒートに分配
-- 3チャンネル: 最後のヒートが1人の場合は2人・2人に調整
-- 4チャンネル: 最後のヒートが1-2人の場合は3人ずつに調整
+HeatGeneratorを使用してヒートを生成
 
 #### `InitHeats()`
 メイン初期化関数。全レースのヒートを生成
@@ -54,14 +105,14 @@ HTTPのPOSTリクエストハンドラー。レース結果を受信して処理
 5. Race 1の全ラウンドのヒートを設定
 6. Race 2のトーナメントヒートを設定
 
-#### `_setHeats(row: number, race: number, round: number, heatStart: number, numHeats: number, heats?: string[][])`
-ヒートリストシートに指定されたレース/ラウンドのヒート情報を設定
+#### `populateHeatSchedule(row: number, race: number, round: number, heatStart: number, numHeats: number, heats?: string[][])`
+ヒートリストシートに指定されたレース/ラウンドのヒート情報を設定（旧 _setHeats）
 
 #### `setTournmentHeatRef(startRow: number, referenceStartCell: string)`
 トーナメントシートからヒートリストシートへの参照式を設定
 
-#### `getHeatList()`
-現在のヒートリストを取得してJSON形式で返す
+#### `getHeatList(): HeatAssignment[]`
+現在のヒートリストを取得して返す
 
 #### `findHeatCellInTournament(): string[]`
 トーナメントシート内の「Heat X」セルを検索して返す
@@ -70,29 +121,19 @@ HTTPのPOSTリクエストハンドラー。レース結果を受信して処理
 
 #### `findOrAddRow(sheet: Sheet, heatNumber: number, pilotName: string): [number, "found" | "added"]`
 シートから指定されたヒート番号とパイロット名の行を検索、なければ追加
-- B列（ヒート番号）とD列（パイロット名）で検索
 
 #### `addOrUpdateResult(sheet: Sheet, roundNumber: number, heatNumber: number, startTimestamp: number, records: RaceRecord[])`
-レース結果をシートに追加または更新
-- A列: ラウンド番号
-- B列: ヒート番号
-- C列: レース開始時刻（日本時間）
-- D列: パイロット名
-- E列: 順位（position + 1）
-- F列: ラップ数（laps.length - 1）
-- G列: 総時間
-- J列以降: 各ラップタイム
+レース結果をシートに追加または更新（改善版）
+- SheetService.COLUMNSを使用
+- 定数を使用したフォーマット設定
 
 #### `calcRace1Result()`
-Race 1の全結果を計算
-- 各ラウンドの順位計算
-- 次ラウンドのヒート割り当て
-- 総合順位の計算
+Race 1の全結果を計算（改善版）
+- SheetServiceを使用
+- 定数を使用したタイムアウト設定
 
 #### `calcRoundRank(roundIndex: number, roundRecords: {}, prevRoundRecords: RoundRecord[])`
 指定されたラウンドの順位を計算
-- ラップ数（降順）→タイム（昇順）でソート
-- 最速ラップタイムも記録
 
 #### `addPilotResultsForRace1(pilot: string, records: RoundRecord[])`
 パイロットの全ラウンドの結果を集計
@@ -104,22 +145,22 @@ Race 1の全結果を計算
 前ラウンドの順位順で次ラウンドのヒートを設定
 
 #### `setRace1Heats(round: number, pilots: string[])`
-指定されたラウンドのヒートを設定
+指定されたラウンドのヒートを設定（HeatGeneratorを使用）
 
 #### `clearRace1RawResult()`
-Race 1の生データをクリア
+Race 1の生データをクリア（定数を使用）
 
 #### `clearRace1RoundResult()`
-Race 1のラウンド別結果をクリア
+Race 1のラウンド別結果をクリア（SheetServiceを使用）
 
 #### `clearRace1TotalResult()`
-Race 1の総合結果をクリア
+Race 1の総合結果をクリア（SheetServiceを使用）
 
 #### `clearRace1AllResults()`
 Race 1の全結果をクリア
 
 #### `createDummyRaceData(pilot: string, position: number)`
-テスト用のダミーレースデータを生成
+テスト用のダミーレースデータを生成（定数を使用）
 
 #### `sendDummyResult()`
 現在のヒートのダミー結果を送信（テスト用）
@@ -127,9 +168,14 @@ Race 1の全結果をクリア
 ## Race2.ts - Race 2処理
 
 #### `clearRace2RawResult()`
-Race 2の生データをクリア
+Race 2の生データをクリア（SheetServiceを使用）
 
 ## KVS.ts - キーバリューストレージ
+
+### KVS_CONSTANTS
+- `CACHE_DURATION` - キャッシュ期間
+- `DEFAULT_NUM_CHANNELS` - デフォルトチャンネル数
+- `KEYS` - KVSキー定義
 
 #### `getValueForKey(key: string)`
 データシートから指定されたキーの値を取得（キャッシュ付き）

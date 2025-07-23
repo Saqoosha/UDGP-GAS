@@ -1,51 +1,18 @@
 function generateHeats(pilots: string[], numChannels: number): string[][] {
-    const heats = pilots.reduce((acc, pilot, i) => {
-        const index = Math.floor(i / numChannels);
-        if (!acc[index]) {
-            acc[index] = [];
-        }
-        acc[index].push(pilot);
-        return acc;
-    }, [] as string[][]);
-    const lastHeat = heats[heats.length - 1];
-    switch (numChannels) {
-        case 3:
-            switch (lastHeat.length) {
-                case 1: // 最後のヒートが1人のときは、前のヒートから1人を移動させて、2人・2人にする
-                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
-                    break;
-            }
-            break;
-        case 4:
-            switch (lastHeat.length) {
-                case 1: // 最後のヒートが1人のときは、最後の3ヒートを3人ずつにする
-                    heats[heats.length - 2].unshift(heats[heats.length - 3].pop() as string);
-                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
-                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
-                    break;
-                case 2: // 最後のヒートが2人のときは、前のヒートから1人を移動させて、3人・3人にする
-                    lastHeat.unshift(heats[heats.length - 2].pop() as string);
-                    break;
-            }
-            break;
-    }
-
-    // ensure all heats have required columns
-    for (let i = 0; i < heats.length; i++) {
-        const heat = heats[i];
-        while (heat.length < numChannels) {
-            heat.push("");
-        }
-    }
-    return heats;
+    return HeatGenerator.generate(pilots, numChannels);
 }
 
 function InitHeats() {
-    // clear heatListSheet and clear background
+    const sheets = SheetService.getInstance();
+    const heatListSheet = sheets.getHeatListSheet();
+    const pilotsSheet = sheets.getPilotsSheet();
+    const tournamentSheet = sheets.getTournamentSheet();
+    
+    // Clear heat list sheet
     heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), 10).clearContent();
     heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), heatListSheet.getMaxColumns()).setBackground(null);
 
-    const pilotsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("参加パイロット");
+    // Get pilots
     const pilots = pilotsSheet
         .getRange("C2:C")
         .getValues()
@@ -55,33 +22,35 @@ function InitHeats() {
     const numChannels = getNumChannels();
     const heats = generateHeats(pilots, numChannels);
 
-    // set channels to pilotsSheet from heat 1
+    // Set channels to pilots sheet
     const flatHeats = heats.reduce((acc, heat) => {
         acc.push(...heat);
         return acc;
     }, []);
-    const CHANNEL_NAMES =
-        numChannels === 3 ? ["E1 5705", "F1 5740", "F4 5800", ""] : ["R2 5695", "A8 5725", "B4 5790", "F5 5820"];
+    
+    const CHANNEL_NAMES = HeatGenerator.getChannelNames(numChannels);
     const channels = flatHeats
         .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
         .filter((v) => v !== null);
     pilotsSheet.getRange(2, 4, channels.length, 1).setValues(channels.map((channel) => [channel]));
 
-    heatListSheet.getRange(1, 7, 1, 4).setValues([CHANNEL_NAMES]);
+    heatListSheet.getRange(1, SheetService.COLUMNS.HEAT_LIST.PILOTS_START, 1, 4).setValues([CHANNEL_NAMES]);
 
-    // set all heats to dataSheet
+    // Set all heats to heat list sheet
     let row = 2;
     let heatNumber = 1;
+    
     // Race 1
     for (let i = 1; i <= getNumRoundForRace1(); i++) {
-        _setHeats(row, 1, i, heatNumber, heats.length, heats);
+        populateHeatSchedule(row, 1, i, heatNumber, heats.length, heats);
         row += heats.length + 1;
         heatNumber += heats.length;
     }
+    
     // Race 2 - Double Elimination Tournament
     const tournamentHeatCells = findHeatCellInTournament();
     const heatCountForRace2 = tournamentHeatCells.length;
-    _setHeats(row, 2, 0, heatNumber, heatCountForRace2);
+    populateHeatSchedule(row, 2, 0, heatNumber, heatCountForRace2);
     for (const cell of tournamentHeatCells) {
         setTournmentHeatRef(row++, cell);
     }
@@ -98,7 +67,7 @@ function InitHeats() {
     setValueForKey("num pilots", pilots.length);
 }
 
-function _setHeats(
+function populateHeatSchedule(
     row: number,
     race: number,
     round: number,
@@ -106,32 +75,43 @@ function _setHeats(
     numHeats: number,
     heats: string[][] | undefined = undefined,
 ) {
-    // reset
+    const sheets = SheetService.getInstance();
+    const heatListSheet = sheets.getHeatListSheet();
+    const cols = SheetService.COLUMNS.HEAT_LIST;
+    
+    // Reset
     heatListSheet.getRange(row, 1, numHeats, 10).clearContent().setHorizontalAlignment("center");
     heatListSheet.getRange(row, 1, numHeats, heatListSheet.getMaxColumns()).setBackground(null);
 
-    // title
-    heatListSheet.getRange(row, 1).setValue(round > 0 ? `Race ${race}-${round}` : `Race ${race}`);
+    // Title
+    heatListSheet.getRange(row, cols.RACE).setValue(round > 0 ? `Race ${race}-${round}` : `Race ${race}`);
 
-    // heat number
-    heatListSheet.getRange(row, 2, numHeats, 1).setValues(new Array(numHeats).fill(0).map((_, i) => [i + heatStart]));
+    // Heat numbers
+    heatListSheet.getRange(row, cols.HEAT_NUMBER, numHeats, 1)
+        .setValues(new Array(numHeats).fill(0).map((_, i) => [i + heatStart]));
 
-    // time
+    // Time formulas
     if (heatStart === 1) {
-        heatListSheet.getRange(row, 3).setValue("9:00:00");
-        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C14,0)");
+        heatListSheet.getRange(row, cols.TIME).setValue("9:00:00");
+        heatListSheet.getRange(row + 1, cols.TIME, numHeats - 1, 1)
+            .setFormulaR1C1(SHEET_FORMULAS.TIME_INCREMENT);
     } else {
-        heatListSheet.getRange(row, 3).setFormulaR1C1("=R[-2]C[0]+time(0,R3C14,0)");
-        heatListSheet.getRange(row + 1, 3, numHeats - 1, 1).setFormulaR1C1("=R[-1]C[0]+time(0,R2C14,0)");
+        heatListSheet.getRange(row, cols.TIME)
+            .setFormulaR1C1(SHEET_FORMULAS.TIME_INCREMENT_WITH_INTERVAL);
+        heatListSheet.getRange(row + 1, cols.TIME, numHeats - 1, 1)
+            .setFormulaR1C1(SHEET_FORMULAS.TIME_INCREMENT);
     }
-    heatListSheet.getRange(row, 6, numHeats, 1).setFormulaR1C1('=IF(ISBLANK(R[0]C[-1]), "", (R[0]C[-1]-R[0]C[-3])*1440)');
+    
+    // Duration formula
+    heatListSheet.getRange(row, cols.DURATION, numHeats, 1)
+        .setFormulaR1C1(SHEET_FORMULAS.DURATION_MINUTES);
 
-    // pilot
+    // Pilots
     if (heatStart === 1 && heats) {
-        heatListSheet.getRange(row, 7, heats.length, heats[0].length).setValues(heats);
+        heatListSheet.getRange(row, cols.PILOTS_START, heats.length, heats[0].length).setValues(heats);
     }
 
-    // interval
+    // Interval row
     const intervalRow = row + numHeats;
     heatListSheet.getRange(intervalRow, 1, 1, heatListSheet.getMaxColumns()).setBackground("#d9d9d9").clearContent();
     heatListSheet.getRange(intervalRow, 1).setValue("組み合わせ発表＆チャンネル調整").setHorizontalAlignment("left");
@@ -144,6 +124,8 @@ function _setHeats(
  * @param {string} referenceStartCell - 参照する開始セル（例: 'D3'）。
  */
 function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
+    const sheets = SheetService.getInstance();
+    const heatListSheet = sheets.getHeatListSheet();
     const referenceSheetName = "Race 2 Tournament";
     const startColumn = "G"; // 数式を設定する開始列（この例では 'G' 列から開始）
     const numberOfColumns = 2; // 設定する数式の列数
@@ -166,20 +148,24 @@ function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
     range.setFormulas([formulas[0]]);
 }
 
-function getHeatList() {
+function getHeatList(): HeatAssignment[] {
     try {
+        const sheets = SheetService.getInstance();
+        const heatListSheet = sheets.getHeatListSheet();
         const range = heatListSheet.getRange("A2:I");
         const values = range.getValues();
         let previousRace = "";
+        
         const data = values
             .filter(([_, heat]) => heat && !Number.isNaN(heat))
             .map((row) => {
-                const race = row[0] ? row[0].toString() : previousRace; // 空でない場合はその値を使用し、空の場合は前の値を使用
+                const race = row[0] ? row[0].toString() : previousRace;
                 const heat = row[1].toString();
-                const pilots = row.slice(6).map((pilot) => pilot.toString()); // C-F列をスキップし、G列から開始
-                if (row[0]) previousRace = race; // 現在のラウンドが空でない場合、previousRoundを更新
+                const pilots = row.slice(6).map((pilot) => pilot.toString());
+                if (row[0]) previousRace = race;
                 return { round: race, heat, pilots };
             });
+            
         console.log(data);
         return data;
     } catch (error) {
@@ -189,6 +175,8 @@ function getHeatList() {
 }
 
 function findHeatCellInTournament(): string[] {
+    const sheets = SheetService.getInstance();
+    const tournamentSheet = sheets.getTournamentSheet();
     const tournamentRange = tournamentSheet.getDataRange();
     const displayValues = tournamentRange.getDisplayValues();
     const fontWeights = tournamentRange.getFontWeights();
@@ -213,7 +201,5 @@ function findHeatCellInTournament(): string[] {
 
     matches.sort((a, b) => a.number - b.number);
     console.log("All matches:", matches);
-    const result = matches.map((m) => m.address);
-    // console.log(result);
-    return result;
+    return matches.map((m) => m.address);
 }
