@@ -11,7 +11,7 @@ const RACE_CONSTANTS = {
     
     TIME_FORMAT: {
         LOCALE: "ja-JP",
-        DATE_FORMAT: "yyyy/mm/dd h:mm:ss"
+        DATE_FORMAT: "h:mm:ss"
     },
     
     LOCK_TIMEOUT: 20000,         // 20 seconds lock timeout

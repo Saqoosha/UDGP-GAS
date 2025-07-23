@@ -30,9 +30,12 @@ function doGet(e: GoogleAppsScript.Events.DoGet) {
 
 function doPost(e: GoogleAppsScript.Events.DoPost) {
     try {
+        console.log("doPost started");
         logRequest(e);
         const data = validateAndParsePostData(e);
+        console.log("Data validated:", JSON.stringify(data));
         const result = processRaceData(data);
+        console.log("Data processed successfully");
         return createSuccessResponse(result);
     } catch (error) {
         console.error("Error in doPost:", error);
@@ -60,14 +63,22 @@ function processRaceData(data: PostData): ApiResponse {
     }
     
     const heatNumber = Number.parseInt(data.heat.replace(/[^\d]/g, ""), 10);
+    console.log("Processing heat number:", heatNumber);
     setHeatStartTime(heatNumber, data.start);
     
     const raceMode = data.class.split("-")[0];
+    console.log("Race mode:", raceMode);
+    
     switch (raceMode) {
         case RACE_CONSTANTS.RACE_MODES.RACE_1: {
             const roundNumber = Number.parseInt(data.class.split("-")[1]);
-            addOrUpdateResult(App.getRace1ResultSheet(), roundNumber, heatNumber, data.start, data.results);
+            console.log("Round number:", roundNumber, "Results count:", data.results.length);
+            const race1ResultSheet = App.getRace1ResultSheet();
+            console.log("Got Race1 sheet, calling addOrUpdateResult");
+            addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.start, data.results);
+            console.log("addOrUpdateResult completed, calling calcRace1Result");
             calcRace1Result();
+            console.log("calcRace1Result completed");
             break;
         }
         case RACE_CONSTANTS.RACE_MODES.RACE_2: {
@@ -79,6 +90,7 @@ function processRaceData(data: PostData): ApiResponse {
     }
     
     if (data.action === "save") {
+        console.log("Incrementing heat to:", heatNumber + 1);
         setCurrentHeat(heatNumber + 1);
     }
     

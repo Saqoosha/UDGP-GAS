@@ -33,22 +33,48 @@ function addOrUpdateResult(
     startTimestamp: number,
     records: RaceRecord[],
 ) {
+    console.log("addOrUpdateResult started - Heat:", heatNumber, "Records:", records.length);
     const cols = SheetService.COLUMNS.RACE1_RESULTS;
+    console.log("Got columns from SheetService:", cols);
     const sorted = records.sort((a, b) => a.position - b.position);
     const startStr = new Date(startTimestamp).toLocaleString(RACE_CONSTANTS.TIME_FORMAT.LOCALE);
+    console.log("Sheet info - MaxRows:", sheet.getMaxRows(), "LastRow:", sheet.getLastRow());
     
-    for (const record of sorted) {
+    for (let i = 0; i < sorted.length; i++) {
+        const record = sorted[i];
         const { pilot, position, laps, time } = record;
+        console.log(`Processing pilot: ${pilot}, position: ${position}, laps: ${laps.length}`);
         const [row, foundOrAdded] = findOrAddRow(sheet, heatNumber, pilot);
-        const value = [roundNumber, heatNumber, startStr, pilot, position + 1, laps.length - 1, time];
+        console.log(`Row ${row} - ${foundOrAdded}`);
+        
+        // Check if this is the first pilot of a new heat (not the first heat overall)
+        if (i === 0 && row > 2) {
+            // Get the heat number from the previous row
+            const prevHeat = sheet.getRange(row - 1, cols.HEAT).getValue();
+            if (prevHeat && prevHeat !== heatNumber) {
+                // Add top border to this row
+                sheet.getRange(row, 1, 1, sheet.getMaxColumns())
+                    .setBorder(true, null, null, null, null, null, "#c6c6c6", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+            }
+        }
+        
+        const lapCount = laps.length > 0 ? laps.length - 1 : 0; // Handle 0 laps case
+        const value = [roundNumber, heatNumber, startStr, pilot, position + 1, lapCount, time];
         sheet.getRange(row, cols.ROUND, 1, value.length).setValues([value]);
-        sheet.getRange(row, cols.LAP_TIMES_START, 1, laps.length).setValues([laps]);
+        
+        // Only write lap times if there are any
+        if (laps.length > 0) {
+            sheet.getRange(row, cols.LAP_TIMES_START, 1, laps.length).setValues([laps]);
+        }
     }
     
-    // Set start time column format
-    sheet.getRange(2, cols.START_TIME, sheet.getMaxRows() - 1, 1)
-        .setNumberFormat(RACE_CONSTANTS.TIME_FORMAT.DATE_FORMAT);
-
+    // Set start time column format (only if there are rows)
+    const maxRows = sheet.getMaxRows();
+    if (maxRows > 1) {
+        sheet.getRange(2, cols.START_TIME, maxRows - 1, 1)
+            .setNumberFormat(RACE_CONSTANTS.TIME_FORMAT.DATE_FORMAT);
+    }
+    
     SpreadsheetApp.flush();
 }
 
@@ -229,6 +255,10 @@ function clearRace1RawResult() {
     const cols = SheetService.COLUMNS.RACE1_RESULTS;
     
     race1ResultSheet.getRange("A2:AK").clearContent();
+    
+    // Clear all borders (especially horizontal borders)
+    race1ResultSheet.getRange("A2:AK").setBorder(false, false, false, false, false, false);
+    
     race1ResultSheet.getRange("H2:H").setValue(false);
     race1ResultSheet.getRange("I2:I").setValue(SHEET_FORMULAS.RESULT_LAPS);
 }
@@ -260,6 +290,8 @@ function clearRace1AllResults() {
     clearRace1RoundResult();
     clearRace1TotalResult();
 }
+
+// Removed setBordersForHeats function - borders are now added inline during data insertion
 
 function createDummyRaceData(
     pilot: string,
