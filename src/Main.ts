@@ -1,13 +1,5 @@
-// Initialize sheet service
-const sheets = SheetService.getInstance();
-
-// Get sheet references through service
-const pilotsSheet = sheets.getPilotsSheet();
-const heatListSheet = sheets.getHeatListSheet();
-const race1ResultSheet = sheets.getRace1ResultSheet();
-const race2ResultSheet = sheets.getRace2ResultSheet();
-const tournamentSheet = sheets.getTournamentSheet();
-const dataSheet = sheets.getDataSheet();
+// Main.ts - Core application functions
+// All sheet access goes through App global
 
 function findLastIndex<T>(arr: T[], predicate: (val: T) => boolean): number {
     let lastIndex = -1;
@@ -74,12 +66,12 @@ function processRaceData(data: PostData): ApiResponse {
     switch (raceMode) {
         case RACE_CONSTANTS.RACE_MODES.RACE_1: {
             const roundNumber = Number.parseInt(data.class.split("-")[1]);
-            addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.start, data.results);
+            addOrUpdateResult(App.getRace1ResultSheet(), roundNumber, heatNumber, data.start, data.results);
             calcRace1Result();
             break;
         }
         case RACE_CONSTANTS.RACE_MODES.RACE_2: {
-            addOrUpdateResult(race2ResultSheet, 1, heatNumber, data.start, data.results);
+            addOrUpdateResult(App.getRace2ResultSheet(), 1, heatNumber, data.start, data.results);
             break;
         }
         default:
@@ -106,7 +98,7 @@ function createErrorResponse(error: string): GoogleAppsScript.Content.TextOutput
 }
 
 function logRequest(e: GoogleAppsScript.Events.DoPost): void {
-    const logSheet = sheets.getLogSheet();
+    const logSheet = App.getSheets().getLogSheet();
     logSheet.getRange("1:1").insertCells(SpreadsheetApp.Dimension.ROWS);
     logSheet.getRange(1, 1).setValue(new Date().toLocaleString(RACE_CONSTANTS.TIME_FORMAT.LOCALE));
     logSheet.getRange(1, 2).setValue(e);
@@ -121,11 +113,13 @@ function setHeatStartTime(heatNumber: number, timestamp: number) {
         return;
     }
     const t = new Date(timestamp);
+    const heatListSheet = App.getHeatListSheet();
     heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.START_TIME).setValue(t);
     heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.ACTUAL_TIME).setValue(formatTimestampToTimeString(timestamp));
 }
 
 function findRowIndexByHeatNumber(heatNumber: number): number {
+    const heatListSheet = App.getHeatListSheet();
     const columnBValues = heatListSheet.getRange("B:B").getValues();
     
     for (let i = 0; i < columnBValues.length; i++) {

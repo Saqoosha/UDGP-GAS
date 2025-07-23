@@ -25,8 +25,7 @@ function getValueForKey(key: string) {
         return cached;
     }
     
-    const sheets = SheetService.getInstance();
-    const dataSheet = sheets.getDataSheet();
+    const dataSheet = App.getDataSheet();
     const data = dataSheet.getRange(1, 1, dataSheet.getLastRow(), 2).getValues();
     
     for (let i = 0; i < data.length; i++) {
@@ -40,8 +39,7 @@ function getValueForKey(key: string) {
 
 function setValueForKey(key: string, value: string | number): void {
     const cache = CacheService.getScriptCache();
-    const sheets = SheetService.getInstance();
-    const dataSheet = sheets.getDataSheet();
+    const dataSheet = App.getDataSheet();
     const data = dataSheet.getRange(1, 1, dataSheet.getLastRow(), 2).getValues();
     
     for (let i = 0; i < data.length; i++) {

@@ -3,10 +3,9 @@ function generateHeats(pilots: string[], numChannels: number): string[][] {
 }
 
 function InitHeats() {
-    const sheets = SheetService.getInstance();
-    const heatListSheet = sheets.getHeatListSheet();
-    const pilotsSheet = sheets.getPilotsSheet();
-    const tournamentSheet = sheets.getTournamentSheet();
+    const heatListSheet = App.getHeatListSheet();
+    const pilotsSheet = App.getPilotsSheet();
+    const tournamentSheet = App.getTournamentSheet();
     
     // Clear heat list sheet
     heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), 10).clearContent();
@@ -75,8 +74,7 @@ function populateHeatSchedule(
     numHeats: number,
     heats: string[][] | undefined = undefined,
 ) {
-    const sheets = SheetService.getInstance();
-    const heatListSheet = sheets.getHeatListSheet();
+    const heatListSheet = App.getHeatListSheet();
     const cols = SheetService.COLUMNS.HEAT_LIST;
     
     // Reset
@@ -124,8 +122,7 @@ function populateHeatSchedule(
  * @param {string} referenceStartCell - 参照する開始セル（例: 'D3'）。
  */
 function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
-    const sheets = SheetService.getInstance();
-    const heatListSheet = sheets.getHeatListSheet();
+    const heatListSheet = App.getHeatListSheet();
     const referenceSheetName = "Race 2 Tournament";
     const startColumn = "G"; // 数式を設定する開始列（この例では 'G' 列から開始）
     const numberOfColumns = 2; // 設定する数式の列数
@@ -150,8 +147,7 @@ function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
 
 function getHeatList(): HeatAssignment[] {
     try {
-        const sheets = SheetService.getInstance();
-        const heatListSheet = sheets.getHeatListSheet();
+        const heatListSheet = App.getHeatListSheet();
         const range = heatListSheet.getRange("A2:I");
         const values = range.getValues();
         let previousRace = "";
@@ -175,8 +171,7 @@ function getHeatList(): HeatAssignment[] {
 }
 
 function findHeatCellInTournament(): string[] {
-    const sheets = SheetService.getInstance();
-    const tournamentSheet = sheets.getTournamentSheet();
+    const tournamentSheet = App.getTournamentSheet();
     const tournamentRange = tournamentSheet.getDataRange();
     const displayValues = tournamentRange.getDisplayValues();
     const fontWeights = tournamentRange.getFontWeights();

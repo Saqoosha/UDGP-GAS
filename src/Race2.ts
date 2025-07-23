@@ -1,6 +1,5 @@
 function clearRace2RawResult() {
-    const sheets = SheetService.getInstance();
-    const race2ResultSheet = sheets.getRace2ResultSheet();
+    const race2ResultSheet = App.getRace2ResultSheet();
     
     race2ResultSheet.getRange("A2:AK").clearContent();
     race2ResultSheet.getRange("G2:G").setValue(false);

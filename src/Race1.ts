@@ -56,9 +56,8 @@ function calcRace1Result() {
     const lock = LockService.getDocumentLock();
     lock.waitLock(RACE_CONSTANTS.LOCK_TIMEOUT);
 
-    const sheets = SheetService.getInstance();
-    const race1ResultSheet = sheets.getRace1ResultSheet();
-    const race1TotalSheet = sheets.getRace1TotalSheet();
+    const race1ResultSheet = App.getRace1ResultSheet();
+    const race1TotalSheet = App.getSheets().getRace1TotalSheet();
 
     const race1Result: { [key: string]: RoundRecord[] } = {};
     const addRoundResult = (round: number, records: RoundRecord[]) => {
@@ -125,8 +124,7 @@ function calcRoundRank(
     roundRecords: { [key: string]: RoundRecord },
     prevRoundRecords: RoundRecord[],
 ) {
-    const sheets = SheetService.getInstance();
-    const race1RoundSheet = sheets.getRace1RoundSheet();
+    const race1RoundSheet = App.getSheets().getRace1RoundSheet();
     
     const sortedByLaps = Object.values(roundRecords).sort((a, b) => {
         if (a.resultLaps === b.resultLaps) {
@@ -215,8 +213,7 @@ function setRace1NextRoundHeatsByLaps(nextRound: number, prevRoundResults: Round
 }
 
 function setRace1Heats(round: number, pilots: string[]) {
-    const sheets = SheetService.getInstance();
-    const heatListSheet = sheets.getHeatListSheet();
+    const heatListSheet = App.getHeatListSheet();
     const heats = HeatGenerator.generate(pilots, getNumChannels());
     const numRows = getHeatsPerRound(1) + 1;
     heatListSheet.getRange(
@@ -228,8 +225,7 @@ function setRace1Heats(round: number, pilots: string[]) {
 }
 
 function clearRace1RawResult() {
-    const sheets = SheetService.getInstance();
-    const race1ResultSheet = sheets.getRace1ResultSheet();
+    const race1ResultSheet = App.getRace1ResultSheet();
     const cols = SheetService.COLUMNS.RACE1_RESULTS;
     
     race1ResultSheet.getRange("A2:AK").clearContent();
@@ -238,8 +234,7 @@ function clearRace1RawResult() {
 }
 
 function clearRace1RoundResult() {
-    const sheets = SheetService.getInstance();
-    const race1RoundSheet = sheets.getRace1RoundSheet();
+    const race1RoundSheet = App.getSheets().getRace1RoundSheet();
     
     race1RoundSheet
         .getRange(3, 1, 18, race1RoundSheet.getMaxColumns())
@@ -256,8 +251,7 @@ function clearRace1RoundResult() {
 }
 
 function clearRace1TotalResult() {
-    const sheets = SheetService.getInstance();
-    const race1TotalSheet = sheets.getRace1TotalSheet();
+    const race1TotalSheet = App.getSheets().getRace1TotalSheet();
     race1TotalSheet.getRange("A2:E").clearContent();
 }
 
@@ -308,8 +302,7 @@ function createDummyRaceData(
 }
 
 function sendDummyResult() {
-    const sheets = SheetService.getInstance();
-    const heatListSheet = sheets.getHeatListSheet();
+    const heatListSheet = App.getHeatListSheet();
     const heat = getCurrentHeat();
     const cols = SheetService.COLUMNS.HEAT_LIST;
 
