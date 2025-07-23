@@ -26,11 +26,35 @@ npm run deploy
 clasp push              # Push dist/ files to GAS
 clasp open-script       # Open in GAS editor
 clasp tail-logs        # View real-time logs
-clasp create-deployment # Create new deployment
+clasp create-deployment # Create new deployment (DO NOT USE - see deployment section)
 clasp list-deployments  # List all deployments
 ```
 
 **Important**: Modern clasp (3.0+) requires manual TypeScript compilation. The project builds to `dist/` directory.
+
+## Deployment Management
+
+**CRITICAL**: Always update the existing deployment. NEVER create new deployments.
+
+### Production Deployment ID
+- **AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b**
+
+### Deployment Workflow
+```bash
+# 1. Build and push code
+npm run push
+
+# 2. Update the existing deployment (DO NOT create new deployment)
+clasp deploy -i AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b -d "Description of changes"
+
+# 3. Verify deployment status
+clasp deployments
+```
+
+### Why This Matters
+- External systems depend on this specific deployment ID
+- Creating new deployments will break existing integrations
+- Always update the existing deployment to maintain consistency
 
 ## Code Architecture
 

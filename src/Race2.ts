@@ -1,6 +1,7 @@
 function clearRace2RawResult() {
-    const sheet = race2ResultSheet;
-    sheet.getRange("A2:AK").clearContent();
-    sheet.getRange("G2:G").setValue(false);
-    sheet.getRange("H2:H").setValue("=IF(G2=TRUE, E2-2, E2)");
+    const race2ResultSheet = App.getRace2ResultSheet();
+    
+    race2ResultSheet.getRange("A2:AK").clearContent();
+    race2ResultSheet.getRange("G2:G").setValue(false);
+    race2ResultSheet.getRange("H2:H").setValue(SHEET_FORMULAS.RESULT_LAPS);
 }
