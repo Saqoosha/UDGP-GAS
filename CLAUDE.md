@@ -12,26 +12,25 @@ This is a Google Apps Script (GAS) project for managing drone racing events, spe
 
 ## Development Commands
 
-Since this is a Google Apps Script project using clasp, here are the essential commands:
-
 ```bash
-# Push code to Google Apps Script
-clasp push
+# Build TypeScript to JavaScript
+npm run build
 
-# Pull code from Google Apps Script  
-clasp pull
+# Build and push to Google Apps Script
+npm run push
 
-# Open the script in Google Apps Script editor
-clasp open
+# Build, push, and deploy
+npm run deploy
 
-# View logs from Google Apps Script
-clasp logs
-
-# Deploy the web app
-clasp deploy
+# Manual commands
+clasp push              # Push dist/ files to GAS
+clasp open-script       # Open in GAS editor
+clasp tail-logs        # View real-time logs
+clasp create-deployment # Create new deployment
+clasp list-deployments  # List all deployments
 ```
 
-**Note**: There are no test commands configured in package.json. The project uses Biome for linting and formatting.
+**Important**: Modern clasp (3.0+) requires manual TypeScript compilation. The project builds to `dist/` directory.
 
 ## Code Architecture
 
@@ -62,6 +61,7 @@ The system operates on a Google Spreadsheet with the following sheets:
    - `calcRace1Result()` - Calculates rankings based on laps and time
    - Supports multiple rounds with heat reassignment
    - Uses lap count as primary ranking, time as tiebreaker
+   - **Important**: Results sheet now includes start time in column C
 
 4. **KVS.ts** - Key-value storage using the data sheet:
    - Configuration parameters like number of channels, rounds, current heat
@@ -85,12 +85,14 @@ The system supports two race formats:
 - Locking mechanism (`LockService`) prevents concurrent modifications
 - Results are automatically calculated when data is edited
 - The web app is configured for anonymous access (`ANYONE_ANONYMOUS`)
+- TypeScript compiles to ES2020 with no module system (GAS requirement)
+- Built files go to `dist/` directory, source files in `src/`
 
 ## Common Development Tasks
 
 When modifying the heat generation algorithm, focus on:
 - [@src/InitHeats.ts](src/InitHeats.ts) - `generateHeats()` function handles pilot distribution
-- Channel configurations are stored in KVS: 3 channels (5705, 5740, 5800) or 4 channels (5705, 5733, 5785, 5805)
+- Channel configurations are stored in KVS: 3 channels (5705, 5740, 5800) or 4 channels (5695, 5725, 5790, 5820)
 
 When working with race results:
 - [@src/Race1.ts](src/Race1.ts) - Contains all Race 1 result processing logic
@@ -100,3 +102,17 @@ When working with race results:
 For API integration:
 - [@src/Main.ts](src/Main.ts) - `doPost()` handles incoming race data
 - Expected format: `{ mode: "udgp-race", class: "Race 1-1", heat: "Heat 1", start: timestamp, results: [...] }`
+
+### Race 1 Results Sheet Column Layout
+
+After recent updates, the Race 1 Results sheet uses the following columns:
+- A: Round number
+- B: Heat number  
+- C: Race start time (Japanese time format)
+- D: Pilot name
+- E: Position
+- F: Lap count
+- G: Total time
+- H: Penalty flag
+- I: Result laps (calculated)
+- J+: Individual lap times
