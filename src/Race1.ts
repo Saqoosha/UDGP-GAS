@@ -256,8 +256,8 @@ function clearRace1RawResult() {
     
     race1ResultSheet.getRange("A2:AK").clearContent();
     
-    // Clear all borders (especially horizontal borders)
-    race1ResultSheet.getRange("A2:AK").setBorder(false, false, false, false, false, false);
+    // Clear only horizontal borders (top and bottom), keep vertical borders
+    race1ResultSheet.getRange("A2:AK").setBorder(false, null, false, null, null, false);
     
     race1ResultSheet.getRange("H2:H").setValue(false);
     race1ResultSheet.getRange("I2:I").setValue(SHEET_FORMULAS.RESULT_LAPS);
