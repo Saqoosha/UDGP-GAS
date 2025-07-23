@@ -61,7 +61,7 @@ function InitHeats() {
         return acc;
     }, []);
     const CHANNEL_NAMES =
-        numChannels === 3 ? ["E1 5705", "F1 5740", "F4 5800", ""] : ["E1 5705", "B1 5733", "A5 5785", "A4 5805"];
+        numChannels === 3 ? ["E1 5705", "F1 5740", "F4 5800", ""] : ["R2 5695", "A8 5725", "B4 5790", "F5 5820"];
     const channels = flatHeats
         .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
         .filter((v) => v !== null);
@@ -79,29 +79,14 @@ function InitHeats() {
         heatNumber += heats.length;
     }
     // Race 2 - Double Elimination Tournament
-    const tournamentHeatCells = [
-        "D3",
-        "D8",
-        "D13",
-        "D18",
-        "D23",
-        "D28",
-        "D33",
-        "D38",
-        "I12",
-        "I18",
-        "I28",
-        "I33",
-        "N28",
-        "N15",
-    ];
+    const tournamentHeatCells = findHeatCellInTournament();
     const heatCountForRace2 = tournamentHeatCells.length;
     _setHeats(row, 2, 0, heatNumber, heatCountForRace2);
     for (const cell of tournamentHeatCells) {
         setTournmentHeatRef(row++, cell);
     }
     row++;
-    tournamentSheet.getRange("B2").setValue(heatNumber);
+    tournamentSheet.getRange("B6").setValue(heatNumber);
 
     heatListSheet
         .getRange(row - 1, 1, 1, heatListSheet.getMaxColumns())
@@ -161,7 +146,7 @@ function _setHeats(
 function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
     const referenceSheetName = "Race 2 Tournament";
     const startColumn = "G"; // 数式を設定する開始列（この例では 'G' 列から開始）
-    const numberOfColumns = 4; // 設定する数式の列数
+    const numberOfColumns = 2; // 設定する数式の列数
     const formulas = [[]]; // 数式を格納する2次元配列を初期化
 
     // 参照するセルの列名と行番号を抽出
@@ -201,4 +186,34 @@ function getHeatList() {
         console.error("Error fetching heat list: ", error);
         return [];
     }
+}
+
+function findHeatCellInTournament(): string[] {
+    const tournamentRange = tournamentSheet.getDataRange();
+    const displayValues = tournamentRange.getDisplayValues();
+    const fontWeights = tournamentRange.getFontWeights();
+    const matches: { address: string; number: number }[] = [];
+
+    for (let row = 0; row < displayValues.length; row++) {
+        for (let col = 0; col < displayValues[row].length; col++) {
+            const value = displayValues[row][col].toString().trim();
+            const isBold = fontWeights[row][col] === "bold";
+            if (value.startsWith("Heat ") && isBold) {
+                const num = Number.parseInt(value.replace("Heat ", ""), 10);
+                if (!Number.isNaN(num)) {
+                    const columnLetter = String.fromCharCode(65 + col + 2);
+                    matches.push({
+                        address: `${columnLetter}${row + 2}`,
+                        number: num,
+                    });
+                }
+            }
+        }
+    }
+
+    matches.sort((a, b) => a.number - b.number);
+    console.log("All matches:", matches);
+    const result = matches.map((m) => m.address);
+    // console.log(result);
+    return result;
 }

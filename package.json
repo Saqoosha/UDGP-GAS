@@ -1,15 +1,19 @@
 {
-  "name": "udgp4-gas",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/google-apps-script": "^1.0.61"
-  }
+    "name": "udgp-gas",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc",
+        "push": "npm run build && clasp push",
+        "deploy": "npm run push && clasp deploy",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/google-apps-script": "^1.0.99",
+        "typescript": "^5.8.3"
+    }
 }

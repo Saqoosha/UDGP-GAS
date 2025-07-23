@@ -3,12 +3,12 @@ function findOrAddRow(
     heatNumber: number,
     pilotName: string,
 ): [number, "found" | "added"] {
-    // 全ての値を取得
-    const values = sheet.getRange("B:C").getValues();
+    // 全ての値を取得（B列:ヒート番号、D列:パイロット名）
+    const values = sheet.getRange("B:D").getValues();
 
     for (let i = 0; i < values.length; i++) {
         const row = values[i];
-        if (Number.parseInt(row[0]) === heatNumber && row[1] === pilotName) {
+        if (Number.parseInt(row[0]) === heatNumber && row[2] === pilotName) {
             return [i + 1, "found"]; // rowインデックスは1から始まるため
         }
     }
@@ -29,16 +29,22 @@ function addOrUpdateResult(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
     roundNumber: number,
     heatNumber: number,
+    startTimestamp: number,
     records: RaceRecord[],
 ) {
     const sorted = records.sort((a, b) => a.position - b.position);
+    const startStr = new Date(startTimestamp).toLocaleString("ja-JP");
+    
     for (const record of sorted) {
         const { pilot, position, laps, time } = record;
         const [row, foundOrAdded] = findOrAddRow(sheet, heatNumber, pilot);
-        const value = [roundNumber, heatNumber, pilot, position + 1, laps.length - 1, time];
+        const value = [roundNumber, heatNumber, startStr, pilot, position + 1, laps.length - 1, time];
         sheet.getRange(row, 1, 1, value.length).setValues([value]);
-        sheet.getRange(row, 9, 1, laps.length).setValues([laps]);
+        sheet.getRange(row, 10, 1, laps.length).setValues([laps]);
     }
+    
+    // 開始時刻列のフォーマットを設定
+    sheet.getRange(2, 3, sheet.getMaxRows() - 1, 1).setNumberFormat("yyyy/mm/dd h:mm:ss");
 
     SpreadsheetApp.flush();
 
@@ -278,8 +284,8 @@ function setRace1Heats(round: number, pilots: string[]) {
 function clearRace1RawResult() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Race 1 Results");
     sheet.getRange("A2:AK").clearContent();
-    sheet.getRange("G2:G").setValue(false);
-    sheet.getRange("H2:H").setValue("=IF(G2=TRUE, E2-2, E2)");
+    sheet.getRange("H2:H").setValue(false);
+    sheet.getRange("I2:I").setValue("=IF(H2=TRUE, F2-2, F2)");
 }
 
 function clearRace1RoundResult() {
@@ -317,6 +323,46 @@ function clearRace1AllResults() {
     clearRace1TotalResult();
 }
 
+function createDummyRaceData(
+    pilot: string,
+    position: number,
+): {
+    pilot: string;
+    position: number;
+    time: number;
+    laps: number[];
+} {
+    const RACE_TIME = 240; // 4 minutes in seconds
+    const GRACE_PERIOD = 10; // 10 seconds grace period
+
+    const baseHeadshotTime = 1.5 + Math.random();
+    const baseLapTime = 15 + Math.random() * 5; // typical lap time around 15-17 seconds
+
+    const laps: number[] = [baseHeadshotTime];
+    let totalTime = baseHeadshotTime;
+
+    // Simulate crash possibility (5% chance)
+    const willCrash = Math.random() < 0.05;
+    const crashTime = willCrash ? RACE_TIME * (0.3 + Math.random() * 0.7) : RACE_TIME + GRACE_PERIOD;
+
+    // Add laps until we exceed race time
+    while (totalTime < crashTime) {
+        const nextLapTime = baseLapTime + (Math.random() - 0.5) * 2; // ±1 second variation
+        if (totalTime + nextLapTime > crashTime) {
+            break;
+        }
+        laps.push(nextLapTime);
+        totalTime += nextLapTime;
+    }
+
+    return {
+        pilot,
+        position,
+        time: totalTime,
+        laps,
+    };
+}
+
 function sendDummyResult() {
     const heat = getCurrentHeat();
 
@@ -335,7 +381,26 @@ function sendDummyResult() {
     }
 
     const pilots = heatListSheet.getRange(rowIndex, 7, 1, 3).getValues()[0];
-    console.log({ race, heat, rowIndex, pilots });
+
+    const unsortedResults = pilots
+        .map((pilot) => createDummyRaceData(pilot, 0))
+        .filter((result) => result.pilot !== "");
+
+    const results = unsortedResults
+        .sort((a, b) => {
+            const aLaps = a.laps.length;
+            const bLaps = b.laps.length;
+            // First compare lap count (descending)
+            if (aLaps !== bLaps) {
+                return bLaps - aLaps;
+            }
+            // If lap counts are equal, compare total time (ascending)
+            return a.time - b.time;
+        })
+        .map((result, index) => ({
+            ...result,
+            position: index,
+        }));
 
     const data = {
         action: "save",
@@ -343,57 +408,13 @@ function sendDummyResult() {
         class: race,
         heat: `Heat ${heat}`,
         start: new Date().getTime(),
-        results: [
-            {
-                pilot: pilots[0],
-                position: 0,
-                time: 62 + Math.random(),
-                laps: [1.723, 29.5, 30.977],
-            },
-            {
-                pilot: pilots[1],
-                position: 1,
-                time: 64 + Math.random(),
-                laps: [2.234, 29.543, 31.053],
-            },
-            {
-                pilot: pilots[2],
-                position: 2,
-                time: 66 + Math.random(),
-                laps: [3.433, 29.56, 31.205],
-            },
-        ].filter((result) => result.pilot !== ""),
+        results,
     };
-    // const data = {
-    //     action: "save",
-    //     mode: "udgp-race",
-    //     class: "Race 2",
-    //     heat: "Heat 31",
-    //     start: 1710078174000,
-    //     results: [
-    //         {
-    //             pilot: "Saqoosha",
-    //             position: 0,
-    //             time: 32.51315676099989,
-    //             laps: [1.1247225950000939, 17.692627395999807, 13.695806769999988],
-    //         },
-    //         {
-    //             pilot: "YASHIMA",
-    //             position: 1,
-    //             time: 33.184177482,
-    //             laps: [1.692337705, 16.42504151200001, 15.06679826499999],
-    //         },
-    //         {
-    //             pilot: "A",
-    //             position: 2,
-    //             time: 33.94902914199997,
-    //             laps: [2.3452185379999264, 15.002039916000058, 16.601770687999984],
-    //         },
-    //     ],
-    // };
+
+    console.log(JSON.stringify(data, null, 2));
 
     const url =
-        "https://script.google.com/macros/s/AKfycbxDxX9w3id9vP5mFTglSVQ7REkMlPgZ-Jo4Z_zsgruQJ-bBR3y8E6CaAqEgtxeZphatEA/exec";
+        "https://script.google.com/macros/s/AKfycbwbjcRAt-5Iwb5vSBuEIiq_Z8gLmzRvHtdKYAF953QYUoeEUmxMgqi0xuvm_PFa8Tyk/exec";
 
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
         method: "post",

@@ -70,12 +70,12 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
             switch (raceMode) {
                 case "Race 1": {
                     const roundNumber = Number.parseInt(data.class.split("-")[1]);
-                    addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.results);
+                    addOrUpdateResult(race1ResultSheet, roundNumber, heatNumber, data.start, data.results);
                     calcRace1Result();
                     break;
                 }
                 case "Race 2": {
-                    addOrUpdateResult(race2ResultSheet, 1, heatNumber, data.results);
+                    addOrUpdateResult(race2ResultSheet, 1, heatNumber, data.start, data.results);
                     break;
                 }
             }
