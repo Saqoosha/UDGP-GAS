@@ -289,8 +289,23 @@ clasp logs --tail
 
 ## Integration with RotorHazard
 
-This GAS system is the legacy backend. The newer system uses:
-- **rh_udgp_sync** plugin → sends data to Cloudflare Workers
-- See `/home/udgp/rh-data/plugins/rh_udgp_sync/AGENTS.md`
+This GAS system handles **heat generation and scheduling** for UDGP races. It works alongside Cloudflare Workers which handles real-time race display.
 
-The GAS endpoint can still receive race data directly from RotorHazard via POST requests.
+### Related Plugins
+
+| Plugin | Role | Backend |
+|--------|------|---------|
+| `rh_yourlaps` | Heat sync from GAS, result sending | This GAS system |
+| `rh_udgp_sync` | Real-time lap sync, live display | Cloudflare Workers |
+
+### Typical Workflow
+
+1. **Heat Generation**: Create heats in Google Sheets, run `InitHeats()` in GAS
+2. **Sync to RH**: Use `rh_yourlaps` plugin to fetch heats from GAS endpoint
+3. **Race**: Both plugins send results (GAS for Sheets, CF for live display)
+4. **Results**: GAS calculates rankings in Sheets, CF shows live leaderboard
+
+### Plugin Documentation
+
+- `rh_yourlaps`: See `/home/udgp/rh-data/plugins/rh_yourlaps/AGENTS.md`
+- `rh_udgp_sync`: See `/home/udgp/rh-data/plugins/rh_udgp_sync/AGENTS.md`
