@@ -24,8 +24,24 @@ function onEdit(e: GoogleAppsScript.Events.SheetsOnEdit) {
 }
 
 function doGet(e: GoogleAppsScript.Events.DoGet) {
+    const type = e.parameter?.type;
+
+    if (type === 'pilots') {
+        const data = getPilotList();
+        return ContentService.createTextOutput(JSON.stringify({ data })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Default: return heat list
     const data = getHeatList();
-    return ContentService.createTextOutput(JSON.stringify({ data: data })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ data })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getPilotList(): { name: string; discord_id: string }[] {
+    const sheet = App.getPilotsSheet();
+    const values = sheet.getRange("C2:D").getValues(); // Column C: Pilot Name, Column D: Discord ID
+    return values
+        .filter(row => row[0] !== "")
+        .map(row => ({ name: String(row[0]), discord_id: String(row[1] || "") }));
 }
 
 function doPost(e: GoogleAppsScript.Events.DoPost) {
@@ -47,13 +63,13 @@ function validateAndParsePostData(e: GoogleAppsScript.Events.DoPost): PostData {
     if (!e.postData?.contents) {
         throw new Error("No post data received");
     }
-    
+
     const data = JSON.parse(e.postData.contents) as PostData;
-    
+
     if (!data.mode || !data.heat || !data.results) {
         throw new Error("Invalid race data format");
     }
-    
+
     return data;
 }
 
@@ -61,14 +77,14 @@ function processRaceData(data: PostData): ApiResponse {
     if (data.mode !== "udgp-race") {
         throw new Error(`Unknown mode: ${data.mode}`);
     }
-    
+
     const heatNumber = Number.parseInt(data.heat.replace(/[^\d]/g, ""), 10);
     console.log("Processing heat number:", heatNumber);
     setHeatStartTime(heatNumber, data.start);
-    
+
     const raceMode = data.class.split("-")[0];
     console.log("Race mode:", raceMode);
-    
+
     switch (raceMode) {
         case RACE_CONSTANTS.RACE_MODES.RACE_1: {
             const roundNumber = Number.parseInt(data.class.split("-")[1]);
@@ -88,12 +104,12 @@ function processRaceData(data: PostData): ApiResponse {
         default:
             throw new Error(`Unknown race mode: ${raceMode}`);
     }
-    
+
     if (data.action === "save") {
         console.log("Incrementing heat to:", heatNumber + 1);
         setCurrentHeat(heatNumber + 1);
     }
-    
+
     return { success: true };
 }
 
@@ -133,13 +149,13 @@ function setHeatStartTime(heatNumber: number, timestamp: number) {
 function findRowIndexByHeatNumber(heatNumber: number): number {
     const heatListSheet = App.getHeatListSheet();
     const columnBValues = heatListSheet.getRange("B:B").getValues();
-    
+
     for (let i = 0; i < columnBValues.length; i++) {
         if (Number.parseInt(columnBValues[i][0]) === heatNumber) {
             return i + 1; // Sheet rows are 1-indexed
         }
     }
-    
+
     return -1;
 }
 
