@@ -37,7 +37,7 @@ clasp list-deployments  # List all deployments
 **CRITICAL**: Always update the existing deployment. NEVER create new deployments.
 
 ### Production Deployment ID
-- **AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b**
+- **AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1**
 
 ### Deployment Workflow
 ```bash
@@ -45,7 +45,7 @@ clasp list-deployments  # List all deployments
 npm run push
 
 # 2. Update the existing deployment (DO NOT create new deployment)
-clasp deploy -i AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b -d "Description of changes"
+clasp deploy -i AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1 -d "Description of changes"
 
 # 3. Verify deployment status
 clasp deployments

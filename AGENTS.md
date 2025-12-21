@@ -78,7 +78,7 @@ clasp deployments       # List all deployments
 
 **Production Deployment ID:**
 ```
-AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b
+AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1
 ```
 
 ### Deployment Workflow
@@ -88,7 +88,7 @@ AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b
 pnpm run push
 
 # 2. Update existing deployment (NOT create new)
-clasp deploy -i AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b -d "Description"
+clasp deploy -i AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1 -d "Description"
 
 # 3. Verify
 clasp deployments
@@ -96,7 +96,7 @@ clasp deployments
 
 ### Endpoint URLs
 
-- **Web App**: `https://script.google.com/macros/s/AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b/exec`
+- **Web App**: `https://script.google.com/macros/s/AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1/exec`
 - Access: Anonymous (ANYONE_ANONYMOUS)
 
 ## Architecture

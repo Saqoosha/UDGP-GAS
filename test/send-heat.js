@@ -18,27 +18,27 @@ for (let i = 1; i < lines.length; i++) {
     if (cols[1] === heatNumber) {
         round = cols[0];
         startTime = cols[2];
-        
+
         // Extract lap times (HS column + lap columns)
         const laps = [];
-        
+
         // Add headshot time (column 9) as first lap
         if (cols[9] && cols[9].trim() !== '' && !isNaN(parseFloat(cols[9]))) {
             laps.push(parseFloat(cols[9]));
         }
-        
+
         // Add remaining lap times (starting from column 10)
         for (let j = 10; j < cols.length; j++) {
             if (cols[j] && cols[j].trim() !== '' && !isNaN(parseFloat(cols[j]))) {
                 laps.push(parseFloat(cols[j]));
             }
         }
-        
+
         // Note pilots with no laps but still include them
         if (laps.length === 0) {
             console.log(`  ⚠️  ${cols[3]} has 0 laps`);
         }
-        
+
         heatData.push({
             pilot: cols[3],
             position: parseInt(cols[4]) - 1, // Convert to 0-based
@@ -68,7 +68,7 @@ heatData.forEach(p => console.log(`  - ${p.pilot}: ${p.laps.length} laps, ${p.ti
 console.log();
 
 // GAS Web App URL
-const url = 'https://script.google.com/macros/s/AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b/exec';
+const url = 'https://script.google.com/macros/s/AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1/exec';
 
 // Send POST request
 fetch(url, {

@@ -10,7 +10,7 @@ const heat1Data = [];
 for (let i = 1; i <= 4; i++) {
     const cols = lines[i].split('\t');
     if (cols[1] !== '1') break; // Only Heat 1
-    
+
     // Extract lap times (starting from column 10)
     const laps = [];
     for (let j = 10; j < cols.length; j++) {
@@ -18,7 +18,7 @@ for (let i = 1; i <= 4; i++) {
             laps.push(parseFloat(cols[j]));
         }
     }
-    
+
     heat1Data.push({
         pilot: cols[3],
         position: parseInt(cols[4]) - 1, // Convert to 0-based
@@ -41,7 +41,7 @@ console.log('POST data to send:');
 console.log(JSON.stringify(postData, null, 2));
 
 // GAS Web App URL
-const url = 'https://script.google.com/macros/s/AKfycbxHf7yPcRd31x4Ge_LfZi-c9y7mm8XraXBAWFJPp6wxmhBbk-uUdh5fTDobo7XtY68b/exec';
+const url = 'https://script.google.com/macros/s/AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1/exec';
 
 // Send POST request
 fetch(url, {
