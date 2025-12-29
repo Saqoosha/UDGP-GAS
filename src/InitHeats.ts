@@ -22,16 +22,17 @@ function InitHeats() {
     const heats = generateHeats(pilots, numChannels);
 
     // Set channels to pilots sheet
-    const flatHeats = heats.reduce((acc, heat) => {
-        acc.push(...heat);
-        return acc;
-    }, []);
+    // DISABLED: Don't overwrite Discord ID column (column D)
+    // const flatHeats = heats.reduce((acc, heat) => {
+    //     acc.push(...heat);
+    //     return acc;
+    // }, []);
 
     const CHANNEL_NAMES = HeatGenerator.getChannelNames(numChannels);
-    const channels = flatHeats
-        .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
-        .filter((v) => v !== null);
-    pilotsSheet.getRange(2, 4, channels.length, 1).setValues(channels.map((channel) => [channel]));
+    // const channels = flatHeats
+    //     .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
+    //     .filter((v) => v !== null);
+    // pilotsSheet.getRange(2, 4, channels.length, 1).setValues(channels.map((channel) => [channel]));
 
     heatListSheet.getRange(1, SheetService.COLUMNS.HEAT_LIST.PILOTS_START, 1, 4).setValues([CHANNEL_NAMES]);
 
@@ -49,12 +50,16 @@ function InitHeats() {
     // Race 2 - Double Elimination Tournament
     const tournamentHeatCells = findHeatCellInTournament();
     const heatCountForRace2 = tournamentHeatCells.length;
-    populateHeatSchedule(row, 2, 0, heatNumber, heatCountForRace2);
-    for (const cell of tournamentHeatCells) {
-        setTournmentHeatRef(row++, cell);
+    if (heatCountForRace2 > 0) {
+        populateHeatSchedule(row, 2, 0, heatNumber, heatCountForRace2);
+        for (const cell of tournamentHeatCells) {
+            setTournmentHeatRef(row++, cell);
+        }
+        row++;
+        if (tournamentSheet) {
+            tournamentSheet.getRange("B6").setValue(heatNumber);
+        }
     }
-    row++;
-    tournamentSheet.getRange("B6").setValue(heatNumber);
 
     heatListSheet
         .getRange(row - 1, 1, 1, heatListSheet.getMaxColumns())
@@ -76,6 +81,11 @@ function populateHeatSchedule(
 ) {
     const heatListSheet = App.getHeatListSheet();
     const cols = SheetService.COLUMNS.HEAT_LIST;
+
+    // Skip if no heats
+    if (numHeats === 0) {
+        return;
+    }
 
     // Reset
     heatListSheet.getRange(row, 1, numHeats, 10).clearContent().setHorizontalAlignment("center");
@@ -190,6 +200,10 @@ function getRound1Heats(): HeatAssignment[] {
 
 function findHeatCellInTournament(): string[] {
     const tournamentSheet = App.getTournamentSheet();
+    if (!tournamentSheet) {
+        console.log("Tournament sheet not found, returning empty array");
+        return [];
+    }
     const tournamentRange = tournamentSheet.getDataRange();
     const displayValues = tournamentRange.getDisplayValues();
     const fontWeights = tournamentRange.getFontWeights();
