@@ -158,7 +158,11 @@ function setTournmentHeatRef(startRow: number, referenceStartCell: string) {
 function getHeatList(): HeatAssignment[] {
     try {
         const heatListSheet = App.getHeatListSheet();
-        const range = heatListSheet.getRange("A2:I");
+        const numChannels = getNumChannels();
+        // PILOTS_START is column 7 (G), so we need columns G through G+numChannels-1
+        // For 4 channels: G, H, I, J (columns 7-10)
+        const lastColumn = String.fromCharCode(71 + numChannels - 1); // G=71, H=72, I=73, J=74
+        const range = heatListSheet.getRange(`A2:${lastColumn}`);
         const values = range.getValues();
         let previousRace = "";
 
@@ -167,7 +171,8 @@ function getHeatList(): HeatAssignment[] {
             .map((row) => {
                 const race = row[0] ? row[0].toString() : previousRace;
                 const heat = row[1].toString();
-                const pilots = row.slice(6).map((pilot) => pilot.toString());
+                // PILOTS_START is column 7 (index 6), get numChannels columns
+                const pilots = row.slice(6, 6 + numChannels).map((pilot) => pilot.toString());
                 if (row[0]) previousRace = race;
                 return { round: race, heat, pilots };
             });
