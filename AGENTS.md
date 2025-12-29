@@ -78,25 +78,47 @@ clasp deployments       # List all deployments
 
 **Production Deployment ID:**
 ```
-AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1
+AKfycby9th4r60PleXLAbKYAmYM86bg3miqGwOTYmdEt1ohzKQ3Oq5TCPl21Dnj5NIGpaJnb
 ```
 
 ### Deployment Workflow
 
+**Important**: `clasp push` only uploads code to the script project. Existing deployments are pinned to specific versions and won't automatically use the new code. You must explicitly update the deployment.
+
 ```bash
-# 1. Build and push code
+# 1. Build and push code to GAS project
 pnpm run push
 
-# 2. Update existing deployment (NOT create new)
-clasp deploy -i AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1 -d "Description"
+# 2. Create a new version (required for updating deployments)
+clasp version "Description of changes"
+# Output: Created version X
 
-# 3. Verify
+# 3. Update existing deployment to use the new version
+clasp deploy -i AKfycby9th4r60PleXLAbKYAmYM86bg3miqGwOTYmdEt1ohzKQ3Oq5TCPl21Dnj5NIGpaJnb -V X -d "Description"
+# Replace X with the version number from step 2
+
+# 4. Verify deployment is updated
 clasp deployments
 ```
 
+### Quick Deploy (One-liner)
+
+```bash
+# Build, push, version, and deploy in sequence
+pnpm run push && clasp version "Your description" && clasp deploy -i AKfycby9th4r60PleXLAbKYAmYM86bg3miqGwOTYmdEt1ohzKQ3Oq5TCPl21Dnj5NIGpaJnb -V $(clasp versions | tail -1 | grep -oP '^\d+') -d "Your description"
+```
+
+### Common Mistakes
+
+| Mistake | Result | Fix |
+|---------|--------|-----|
+| Only running `clasp push` | Code uploaded but deployment still uses old version | Create version + update deployment |
+| Running `clasp deploy` without `-i` | Creates NEW deployment with different URL | Always use `-i DEPLOYMENT_ID` |
+| Using `clasp deploy -i ID` without `-V` | May fail or create new deployment | Always specify `-V VERSION_NUMBER` |
+
 ### Endpoint URLs
 
-- **Web App**: `https://script.google.com/macros/s/AKfycbz7XsLeEUsS1uEJmjhX0YkbJA8GCa8QHS2PK8LFFH3q6o5DxSvYvCBkyLhIVkkYJwS1/exec`
+- **Web App**: `https://script.google.com/macros/s/AKfycby9th4r60PleXLAbKYAmYM86bg3miqGwOTYmdEt1ohzKQ3Oq5TCPl21Dnj5NIGpaJnb/exec`
 - Access: Anonymous (ANYONE_ANONYMOUS)
 
 ## Architecture

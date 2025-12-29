@@ -53,9 +53,29 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
     try {
         console.log("doPost started");
         logRequest(e);
-        const data = validateAndParsePostData(e);
-        console.log("Data validated:", JSON.stringify(data));
-        const result = processRaceData(data);
+
+        if (!e.postData?.contents) {
+            throw new Error("No post data received");
+        }
+
+        const data = JSON.parse(e.postData.contents) as any;
+        console.log("Data received:", JSON.stringify(data));
+
+        // Route by action field
+        if (data.action === "set_start_time") {
+            const result = handleSetStartTime(data);
+            return createSuccessResponse(result);
+        }
+
+        if (data.action === "update_heats") {
+            const result = handleUpdateHeats(data);
+            return createSuccessResponse(result);
+        }
+
+        // Legacy: process race data
+        const validatedData = validateAndParsePostData(e);
+        console.log("Data validated:", JSON.stringify(validatedData));
+        const result = processRaceData(validatedData);
         console.log("Data processed successfully");
         return createSuccessResponse(result);
     } catch (error) {
@@ -139,28 +159,85 @@ function logRequest(e: GoogleAppsScript.Events.DoPost): void {
     SpreadsheetApp.flush();
 }
 
+function handleSetStartTime(data: { heat: number; start: number }): ApiResponse {
+    console.log("handleSetStartTime called with:", JSON.stringify(data));
+    if (!data.heat || !data.start) {
+        throw new Error("Missing heat or start time");
+    }
+    setHeatStartTime(data.heat, data.start);
+    console.log("handleSetStartTime completed successfully");
+    return { success: true };
+}
+
+function handleUpdateHeats(data: { class: string; heats: Array<{ heat: string; pilots: string[] }> }): ApiResponse {
+    if (!data.class || !data.heats) {
+        throw new Error("Missing class or heats data");
+    }
+
+    const heatListSheet = App.getHeatListSheet();
+    const cols = SheetService.COLUMNS.HEAT_LIST;
+
+    // Update heat assignments in sheet
+    for (const heatData of data.heats) {
+        const heatNumberMatch = heatData.heat.match(/(\d+)/);
+        if (!heatNumberMatch) {
+            console.log(`Could not extract heat number from "${heatData.heat}"`);
+            continue;
+        }
+
+        const heatNumber = Number.parseInt(heatNumberMatch[1], 10);
+        const row = findRowIndexByHeatNumber(heatNumber);
+        if (row === -1) {
+            console.log(`Heat ${heatNumber} not found in sheet`);
+            continue;
+        }
+
+        // Update pilot assignments (columns G, H, I, J)
+        const pilotValues = heatData.pilots.slice(0, 4); // Max 4 pilots
+        while (pilotValues.length < 4) {
+            pilotValues.push("");
+        }
+        heatListSheet.getRange(row, cols.PILOTS_START, 1, 4).setValues([pilotValues]);
+    }
+
+    SpreadsheetApp.flush();
+    return { success: true };
+}
+
 function setHeatStartTime(heatNumber: number, timestamp: number) {
+    console.log(`setHeatStartTime: Looking for heat ${heatNumber}, timestamp ${timestamp}`);
     const row = findRowIndexByHeatNumber(heatNumber);
     if (row === -1) {
-        console.log("setHeatStartTime: row not found", heatNumber);
+        console.log(`setHeatStartTime: row not found for heat ${heatNumber}`);
         return;
     }
+    console.log(`setHeatStartTime: Found row ${row} for heat ${heatNumber}`);
     const t = new Date(timestamp);
     const heatListSheet = App.getHeatListSheet();
+    const timeString = formatTimestampToTimeString(timestamp);
+    console.log(`setHeatStartTime: Writing to row ${row}, START_TIME column ${SheetService.COLUMNS.HEAT_LIST.START_TIME}, ACTUAL_TIME column ${SheetService.COLUMNS.HEAT_LIST.ACTUAL_TIME}`);
+    console.log(`setHeatStartTime: Date object: ${t}, Time string: ${timeString}`);
     heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.START_TIME).setValue(t);
-    heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.ACTUAL_TIME).setValue(formatTimestampToTimeString(timestamp));
+    heatListSheet.getRange(row, SheetService.COLUMNS.HEAT_LIST.ACTUAL_TIME).setValue(timeString);
+    SpreadsheetApp.flush();
+    console.log(`setHeatStartTime: Successfully wrote start time for heat ${heatNumber}`);
 }
 
 function findRowIndexByHeatNumber(heatNumber: number): number {
     const heatListSheet = App.getHeatListSheet();
     const columnBValues = heatListSheet.getRange("B:B").getValues();
+    console.log(`findRowIndexByHeatNumber: Looking for heat ${heatNumber}, checking ${columnBValues.length} rows`);
 
     for (let i = 0; i < columnBValues.length; i++) {
-        if (Number.parseInt(columnBValues[i][0]) === heatNumber) {
+        const cellValue = columnBValues[i][0];
+        const parsedValue = Number.parseInt(cellValue);
+        if (parsedValue === heatNumber) {
+            console.log(`findRowIndexByHeatNumber: Found heat ${heatNumber} at row ${i + 1} (cell value: ${cellValue})`);
             return i + 1; // Sheet rows are 1-indexed
         }
     }
 
+    console.log(`findRowIndexByHeatNumber: Heat ${heatNumber} not found. Sample values: ${columnBValues.slice(0, 10).map((v, idx) => `Row ${idx + 1}: ${v[0]}`).join(", ")}`);
     return -1;
 }
 
