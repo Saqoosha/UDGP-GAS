@@ -6,7 +6,7 @@ function InitHeats() {
     const heatListSheet = App.getHeatListSheet();
     const pilotsSheet = App.getPilotsSheet();
     const tournamentSheet = App.getTournamentSheet();
-    
+
     // Clear heat list sheet
     heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), 10).clearContent();
     heatListSheet.getRange(2, 1, heatListSheet.getMaxRows(), heatListSheet.getMaxColumns()).setBackground(null);
@@ -26,7 +26,7 @@ function InitHeats() {
         acc.push(...heat);
         return acc;
     }, []);
-    
+
     const CHANNEL_NAMES = HeatGenerator.getChannelNames(numChannels);
     const channels = flatHeats
         .map((pilot, i) => (pilot ? CHANNEL_NAMES[i % numChannels] : null))
@@ -38,14 +38,14 @@ function InitHeats() {
     // Set all heats to heat list sheet
     let row = 2;
     let heatNumber = 1;
-    
+
     // Race 1
     for (let i = 1; i <= getNumRoundForRace1(); i++) {
         populateHeatSchedule(row, 1, i, heatNumber, heats.length, heats);
         row += heats.length + 1;
         heatNumber += heats.length;
     }
-    
+
     // Race 2 - Double Elimination Tournament
     const tournamentHeatCells = findHeatCellInTournament();
     const heatCountForRace2 = tournamentHeatCells.length;
@@ -76,7 +76,7 @@ function populateHeatSchedule(
 ) {
     const heatListSheet = App.getHeatListSheet();
     const cols = SheetService.COLUMNS.HEAT_LIST;
-    
+
     // Reset
     heatListSheet.getRange(row, 1, numHeats, 10).clearContent().setHorizontalAlignment("center");
     heatListSheet.getRange(row, 1, numHeats, heatListSheet.getMaxColumns()).setBackground(null);
@@ -99,7 +99,7 @@ function populateHeatSchedule(
         heatListSheet.getRange(row + 1, cols.TIME, numHeats - 1, 1)
             .setFormulaR1C1(SHEET_FORMULAS.TIME_INCREMENT);
     }
-    
+
     // Duration formula
     heatListSheet.getRange(row, cols.DURATION, numHeats, 1)
         .setFormulaR1C1(SHEET_FORMULAS.DURATION_MINUTES);
@@ -151,7 +151,7 @@ function getHeatList(): HeatAssignment[] {
         const range = heatListSheet.getRange("A2:I");
         const values = range.getValues();
         let previousRace = "";
-        
+
         const data = values
             .filter(([_, heat]) => heat && !Number.isNaN(heat))
             .map((row) => {
@@ -161,11 +161,29 @@ function getHeatList(): HeatAssignment[] {
                 if (row[0]) previousRace = race;
                 return { round: race, heat, pilots };
             });
-            
+
         console.log(data);
         return data;
     } catch (error) {
         console.error("Error fetching heat list: ", error);
+        return [];
+    }
+}
+
+function getRound1Heats(): HeatAssignment[] {
+    try {
+        const allHeats = getHeatList();
+        // Filter only Race 1-1 heats with non-empty pilots
+        // This ensures we only return heats that have been populated with pilots
+        const round1Heats = allHeats.filter((heat) => {
+            const isRound1 = heat.round === "Race 1-1";
+            const hasPilots = heat.pilots.some((pilot) => pilot && pilot.trim() !== "");
+            return isRound1 && hasPilots;
+        });
+        console.log(`Round 1 heats (${round1Heats.length} heats with pilots):`, round1Heats);
+        return round1Heats;
+    } catch (error) {
+        console.error("Error fetching Round 1 heats: ", error);
         return [];
     }
 }

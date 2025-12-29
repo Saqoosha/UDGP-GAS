@@ -31,6 +31,11 @@ function doGet(e: GoogleAppsScript.Events.DoGet) {
         return ContentService.createTextOutput(JSON.stringify({ data })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    if (type === 'round1') {
+        const data = getRound1Heats();
+        return ContentService.createTextOutput(JSON.stringify({ data })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Default: return heat list
     const data = getHeatList();
     return ContentService.createTextOutput(JSON.stringify({ data })).setMimeType(ContentService.MimeType.JSON);
